@@ -1,23 +1,32 @@
 package main
 
-import "net"
-import "fmt"
+import (
+	_ "bitbucket.org/evolutek/cellaserv-protobuf"
+	"github.com/op/go-logging"
+	"net"
+)
+
+type Service struct {
+	ip net.IPAddr
+}
+
+var log = logging.MustGetLogger("cellaserv")
 
 func handle(conn net.Conn) {
-    fmt.Println("New connection")
+	log.Debug("New connection")
 }
 
 func main() {
-    ln, err := net.Listen("tcp", ":4200")
-    if err != nil {
-        fmt.Println("error")
-    }
-    for {
-        conn, err := ln.Accept()
-        if err != nil {
-            continue
-        }
+	ln, err := net.Listen("tcp", ":4200")
+	if err != nil {
+		log.Error("error")
+	}
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			continue
+		}
 
-        go handle(conn)
-    }
+		go handle(conn)
+	}
 }
