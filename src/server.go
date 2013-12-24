@@ -1,7 +1,7 @@
 package main
 
 import (
-	_ "bitbucket.org/evolutek/cellaserv-protobuf"
+	_ "bitbucket.org/evolutek/gocellaserv-protobuf"
 	"github.com/op/go-logging"
 	"net"
 )
