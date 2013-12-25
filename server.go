@@ -21,6 +21,12 @@ var services []Service
 
 // Each connection is managed here
 func handle(conn net.Conn) {
+	for {
+		handleMessage(conn)
+	}
+}
+
+func handleMessage(conn net.Conn) error {
 	remoteAddr := conn.RemoteAddr()
 	log.Debug("New connection from %s", remoteAddr)
 
@@ -28,24 +34,36 @@ func handle(conn net.Conn) {
 	var msgLen uint32
 	err := binary.Read(conn, binary.BigEndian, &msgLen)
 	if err != nil {
-		panic(fmt.Sprint("Could not read message length:", err))
+		return fmt.Errorf("Could not read message length:", err)
 	}
 
 	log.Debug("Message lenght: %d bytes", msgLen)
 	msgBytes := make([]byte, msgLen)
 	_, err = conn.Read(msgBytes)
 	if err != nil {
-		panic(fmt.Sprint("Could not read message:", err))
+		return fmt.Errorf("Could not read message:", err)
 	}
 
 	msg := &cellaserv.Message{}
 	err = proto.Unmarshal(msgBytes, msg)
 	if err != nil {
-		panic(fmt.Sprint("Could not unmarshal message:", err))
+		return fmt.Errorf("Could not unmarshal message:", err)
 	}
+
+	switch msg.GetType() {
+	case cellaserv.Message_Register:
+		handleRegister(msg)
+	default:
+		return fmt.Errorf("Unknown message type: %d", msg.GetType())
+	}
+
+	return nil
 }
 
-func main() {
+func handleRegister(msg *cellaserv.Message) {
+}
+
+func serve() {
 	ln, err := net.Listen("tcp", ":4200")
 	if err != nil {
 		log.Error("error")
@@ -58,4 +76,9 @@ func main() {
 
 		go handle(conn)
 	}
+}
+
+func main() {
+	serve()
+	// Will add internal "cellaserv" service setup here
 }
