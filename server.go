@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/op/go-logging"
+	"io"
 	"net"
 )
 
@@ -21,46 +22,53 @@ var services []Service
 
 // Each connection is managed here
 func handle(conn net.Conn) {
+	remoteAddr := conn.RemoteAddr()
+	log.Info("[Net] New connection: %s", remoteAddr)
+
 	for {
-		handleMessage(conn)
+		closed, err := handleMessage(conn)
+		if closed {
+			break
+		}
+		if err != nil {
+			log.Error("[Net] %s", err)
+		}
 	}
+
+	log.Info("[Net] Connection closed: %s", remoteAddr)
 }
 
-func handleMessage(conn net.Conn) error {
-	remoteAddr := conn.RemoteAddr()
-	log.Debug("New connection from %s", remoteAddr)
-
+func handleMessage(conn net.Conn) (bool, error) {
 	// Read message length as uint32
 	var msgLen uint32
 	err := binary.Read(conn, binary.BigEndian, &msgLen)
 	if err != nil {
-		return fmt.Errorf("Could not read message length:", err)
+		return err == io.EOF, fmt.Errorf("Could not read message length:", err)
 	}
 
-	log.Debug("Message lenght: %d bytes", msgLen)
+	log.Debug("[Message] Message length: %d bytes", msgLen)
 	msgBytes := make([]byte, msgLen)
 	_, err = conn.Read(msgBytes)
 	if err != nil {
-		return fmt.Errorf("Could not read message:", err)
+		return err == io.EOF, fmt.Errorf("Could not read message:", err)
 	}
 
 	msg := &cellaserv.Message{}
 	err = proto.Unmarshal(msgBytes, msg)
 	if err != nil {
-		return fmt.Errorf("Could not unmarshal message:", err)
+		return false, fmt.Errorf("Could not unmarshal message:", err)
 	}
 
 	switch msg.GetType() {
 	case cellaserv.Message_Register:
-		handleRegister(msg)
+		return false, handleRegister(msg)
 	default:
-		return fmt.Errorf("Unknown message type: %d", msg.GetType())
+		return false, fmt.Errorf("Unknown message type: %d", msg.GetType())
 	}
-
-	return nil
 }
 
-func handleRegister(msg *cellaserv.Message) {
+func handleRegister(msg *cellaserv.Message) error {
+	return nil
 }
 
 func serve() {
