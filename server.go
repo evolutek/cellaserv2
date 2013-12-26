@@ -54,6 +54,9 @@ func handleMessage(conn net.Conn) (bool, error) {
 		return err == io.EOF, fmt.Errorf("Could not read message:", err)
 	}
 
+	// Dump raw msg to log
+	dumpMessage(msgBytes)
+
 	msg := &cellaserv.Message{}
 	err = proto.Unmarshal(msgBytes, msg)
 	if err != nil {
@@ -96,6 +99,12 @@ func main() {
 	// Initialize our maps
 	services = make(map[string]map[string]*Service)
 	servicesConn = make(map[net.Conn][]*Service)
+
+	// Setup dumping
+	err := dumpSetup()
+	if err != nil {
+		log.Error("Could not setup dump: %s", err)
+	}
 
 	serve()
 
