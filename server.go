@@ -5,13 +5,9 @@ import (
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
 	"fmt"
-	"github.com/op/go-logging"
 	"io"
 	"net"
 )
-
-// Setup log
-var log = logging.MustGetLogger("cellaserv")
 
 // Currently connected services
 var services map[string]map[string]*Service
