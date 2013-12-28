@@ -4,7 +4,13 @@ import (
 	"bitbucket.org/evolutek/gocellaserv-protobuf"
 	"code.google.com/p/goprotobuf/proto"
 	"net"
+	"time"
 )
+
+type RequestTimer struct {
+	sender net.Conn
+	timer  *time.Timer
+}
 
 func replyError(conn net.Conn, id *uint64, err_t cellaserv.Reply_Error_Type) {
 	err := &cellaserv.Reply_Error{Type: &err_t}
@@ -61,8 +67,18 @@ func handleRequest(conn net.Conn, msgLen uint32, msgRaw []byte, req *cellaserv.R
 		return
 	}
 
+	// Handle timeouts
+	handleTimeout := func() {
+		_, ok := reqIds[*id]
+		if ok {
+			log.Error("[Request] id:%d Timeout of %s", *id, srvc)
+			replyError(conn, id, cellaserv.Reply_Error_Timeout)
+		}
+	}
+	timer := time.AfterFunc(5*time.Second, handleTimeout)
+
 	// The ID is used to track the sender of the request
-	reqIds[*id] = conn
+	reqIds[*id] = &RequestTimer{conn, timer}
 
 	log.Debug("[Request] Forwarding request to %s", srvc)
 	sendRawMessageLen(srvc.conn, msgLen, msgRaw)

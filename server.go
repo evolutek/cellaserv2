@@ -11,7 +11,7 @@ import (
 // Currently connected services
 var services map[string]map[string]*Service
 var servicesConn map[net.Conn][]*Service
-var reqIds map[uint64]net.Conn
+var reqIds map[uint64]*RequestTimer
 
 // Manage incoming connexions
 func handle(conn net.Conn) {
@@ -115,7 +115,7 @@ func main() {
 	// Initialize our maps
 	services = make(map[string]map[string]*Service)
 	servicesConn = make(map[net.Conn][]*Service)
-	reqIds = make(map[uint64]net.Conn)
+	reqIds = make(map[uint64]*RequestTimer)
 
 	// Setup dumping
 	err := dumpSetup()
