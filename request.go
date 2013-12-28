@@ -9,7 +9,7 @@ import (
 func replyError(conn net.Conn, id *uint64, err_t cellaserv.Reply_Error_Type) {
 	err := &cellaserv.Reply_Error{Type: &err_t}
 
-	reply := &cellaserv.Reply{Error: err}
+	reply := &cellaserv.Reply{Error: err, Id: id}
 	replyBytes, _ := proto.Marshal(reply)
 
 	msgType := cellaserv.Message_Reply
@@ -25,17 +25,20 @@ func handleRequest(conn net.Conn, msgLen uint32, msgRaw []byte, req *cellaserv.R
 
 	// Checks from Get*() methods are useless
 	name := req.ServiceName
+	method := req.Method
+	id := req.Id
+
 	var ident *string
 	if req.ServiceIdentification != nil {
 		ident = req.ServiceIdentification
+		log.Debug("[Request] id:%d %s[%s].%s", *id, *name, *ident, *method)
+	} else {
+		log.Debug("[Request] id:%d %s.%s", *id, *name, *method)
 	}
-	method := req.Method
-	id := req.Id
-	log.Debug("[Request] id:%s %s[%s].%s", id, name, ident, method)
 
 	idents, ok := services[*name]
 	if !ok {
-		log.Warning("[Request] id:%s No such service: %s", *id, *name)
+		log.Warning("[Request] id:%d No such service: %s", *id, *name)
 		replyError(conn, id, cellaserv.Reply_Error_NoSuchService)
 		return
 	}
@@ -43,14 +46,14 @@ func handleRequest(conn net.Conn, msgLen uint32, msgRaw []byte, req *cellaserv.R
 	if ident != nil {
 		srvc, ok = idents[*ident]
 		if !ok {
-			log.Warning("[Request] id:%s No such identification for service %s: %s",
-				id, *name, *ident)
+			log.Warning("[Request] id:%d No such identification for service %s: %s",
+				*id, *name, *ident)
 		}
 	} else {
 		srvc, ok = idents[""]
 		if !ok {
-			log.Warning("[Request] id:%s Must use identification for service %s",
-				id, *name)
+			log.Warning("[Request] id:%d Must use identification for service %s",
+				*id, *name)
 		}
 	}
 	if !ok {
