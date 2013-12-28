@@ -6,11 +6,11 @@ import (
 )
 
 // Add service to service map
-func handleRegister(conn net.Conn, msg *cellaserv.Register) error {
+func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 	name := msg.GetName()
 	ident := msg.GetIdentification()
 	service := &Service{conn, name, ident}
-	log.Info("[Register] New service: %+v", service)
+	log.Info("[Services] New %s", service)
 
 	if _, ok := services[name]; !ok {
 		services[name] = make(map[string]*Service)
@@ -18,7 +18,7 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) error {
 
 	// Check duplicate
 	if s, ok := services[name][ident]; ok {
-		log.Error("[Register] Replacing service %+v", s)
+		log.Warning("[Services] Replace %s", s)
 		sc := servicesConn[s.conn]
 		for i, ss := range sc {
 			if ss.name == name && ss.identification == ident {
@@ -32,9 +32,6 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) error {
 
 	// Keep track of origin connexion in order to remove when the connexion is closed
 	servicesConn[conn] = append(servicesConn[conn], service)
-
-	// No error
-	return nil
 }
 
 // vim: set nowrap tw=100 noet sw=8:

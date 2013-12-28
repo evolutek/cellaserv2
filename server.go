@@ -5,7 +5,6 @@ import (
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
 	"fmt"
-	"io"
 	"net"
 )
 
@@ -25,14 +24,14 @@ func handle(conn net.Conn) {
 			break
 		}
 		if err != nil {
-			log.Error("[Net] %s", err)
+			log.Error("[Message] %s", err)
 		}
 	}
 
 	// Remove services registered by this connection
 	// TODO: notify goroutines waiting for acks for this service
 	for _, s := range servicesConn[conn] {
-		log.Info("[Services] Remove %+v", s)
+		log.Info("[Services] Remove %s", s)
 		delete(services[s.name], s.identification)
 	}
 
@@ -44,18 +43,17 @@ func handleMessage(conn net.Conn) (bool, error) {
 	var msgLen uint32
 	err := binary.Read(conn, binary.BigEndian, &msgLen)
 	if err != nil {
-		return err == io.EOF, fmt.Errorf("Could not read message length:", err)
+		return true, fmt.Errorf("Could not read message length:", err)
 	}
 
-	log.Debug("[Message] Message length: %d bytes", msgLen)
 	msgBytes := make([]byte, msgLen)
 	_, err = conn.Read(msgBytes)
 	if err != nil {
-		return err == io.EOF, fmt.Errorf("Could not read message:", err)
+		return true, fmt.Errorf("Could not read message:", err)
 	}
 
 	// Dump raw msg to log
-	dumpMessage(msgBytes)
+	dumpIncoming(conn, msgBytes)
 
 	msg := &cellaserv.Message{}
 	err = proto.Unmarshal(msgBytes, msg)
@@ -70,7 +68,16 @@ func handleMessage(conn net.Conn) (bool, error) {
 		if err != nil {
 			return false, fmt.Errorf("Could not unmarshal register:", err)
 		}
-		return false, handleRegister(conn, register)
+		handleRegister(conn, register)
+		return false, nil
+	case cellaserv.Message_Request:
+		request := &cellaserv.Request{}
+		err = proto.Unmarshal(msg.GetContent(), request)
+		if err != nil {
+			return false, fmt.Errorf("Could not unmarshal request:", err)
+		}
+		handleRequest(conn, msgLen, msgBytes, request)
+		return false, nil
 	default:
 		return false, fmt.Errorf("Unknown message type: %d", msg.GetType())
 	}
