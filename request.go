@@ -21,7 +21,7 @@ func replyError(conn net.Conn, id *uint64, err_t cellaserv.Reply_Error_Type) {
 }
 
 func handleRequest(conn net.Conn, msgLen uint32, msgRaw []byte, req *cellaserv.Request) {
-	log.Info("[Request] New request from %s", conn.RemoteAddr())
+	log.Info("[Request] Incoming from %s", conn.RemoteAddr())
 
 	// Checks from Get*() methods are useless
 	name := req.ServiceName
@@ -60,6 +60,9 @@ func handleRequest(conn net.Conn, msgLen uint32, msgRaw []byte, req *cellaserv.R
 		replyError(conn, id, cellaserv.Reply_Error_InvalidIdentification)
 		return
 	}
+
+	// The ID is used to track the sender of the request
+	reqIds[*id] = conn
 
 	log.Debug("[Request] Forwarding request to %s", srvc)
 	sendRawMessageLen(srvc.conn, msgLen, msgRaw)

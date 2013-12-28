@@ -11,6 +11,7 @@ import (
 // Currently connected services
 var services map[string]map[string]*Service
 var servicesConn map[net.Conn][]*Service
+var reqIds map[uint64]net.Conn
 
 // Manage incoming connexions
 func handle(conn net.Conn) {
@@ -78,6 +79,14 @@ func handleMessage(conn net.Conn) (bool, error) {
 		}
 		handleRequest(conn, msgLen, msgBytes, request)
 		return false, nil
+	case cellaserv.Message_Reply:
+		reply := &cellaserv.Reply{}
+		err = proto.Unmarshal(msg.GetContent(), reply)
+		if err != nil {
+			return false, fmt.Errorf("Could not unmarshal reply:", err)
+		}
+		handleReply(conn, msgLen, msgBytes, reply)
+		return false, nil
 	default:
 		return false, fmt.Errorf("Unknown message type: %d", msg.GetType())
 	}
@@ -85,7 +94,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 
 // Start listening and receiving connections
 func serve() {
-	ln, err := net.Listen("tcp", ":4200")
+	ln, err := net.Listen("tcp", ":4201")
 	if err != nil {
 		log.Error("[Net] Could not listen: %s", err)
 	}
@@ -106,6 +115,7 @@ func main() {
 	// Initialize our maps
 	services = make(map[string]map[string]*Service)
 	servicesConn = make(map[net.Conn][]*Service)
+	reqIds = make(map[uint64]net.Conn)
 
 	// Setup dumping
 	err := dumpSetup()
