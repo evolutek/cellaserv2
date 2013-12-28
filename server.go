@@ -12,6 +12,7 @@ import (
 var services map[string]map[string]*Service
 var servicesConn map[net.Conn][]*Service
 var reqIds map[uint64]*RequestTimer
+var subscriberMap map[string][]net.Conn
 
 // Manage incoming connexions
 func handle(conn net.Conn) {
@@ -87,6 +88,22 @@ func handleMessage(conn net.Conn) (bool, error) {
 		}
 		handleReply(conn, msgLen, msgBytes, reply)
 		return false, nil
+	case cellaserv.Message_Subscribe:
+		sub := &cellaserv.Subscribe{}
+		err = proto.Unmarshal(msg.GetContent(), sub)
+		if err != nil {
+			return false, fmt.Errorf("Could not unmarshal subscribe:", err)
+		}
+		handleSubscribe(conn, sub)
+		return false, nil
+	case cellaserv.Message_Publish:
+		pub := &cellaserv.Publish{}
+		err = proto.Unmarshal(msg.GetContent(), pub)
+		if err != nil {
+			return false, fmt.Errorf("Could not unmarshal publish:", err)
+		}
+		handlePublish(conn, msgLen, msgBytes, pub)
+		return false, nil
 	default:
 		return false, fmt.Errorf("Unknown message type: %d", msg.GetType())
 	}
@@ -116,6 +133,7 @@ func main() {
 	services = make(map[string]map[string]*Service)
 	servicesConn = make(map[net.Conn][]*Service)
 	reqIds = make(map[uint64]*RequestTimer)
+	subscriberMap = make(map[string][]net.Conn)
 
 	// Setup dumping
 	err := dumpSetup()
