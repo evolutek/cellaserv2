@@ -3,6 +3,7 @@ package main
 import (
 	"bitbucket.org/evolutek/gocellaserv-protobuf"
 	"encoding/json"
+	"io/ioutil"
 	"net"
 	"os"
 	"runtime/pprof"
@@ -45,6 +46,22 @@ func handleListConnections(conn net.Conn, req *cellaserv.Request) {
 	sendReply(conn, req, data)
 }
 
+func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
+	if req.Data == nil {
+		log.Warning("[Cellaserv] Log request does not specify event")
+		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+		return
+	}
+	event := string(req.Data)
+	filename := *logRootDirectory + "/" + event + ".log"
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Warning("[Cellaserv] Could not open log:", filename)
+		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+	}
+	sendReply(conn, req, data)
+}
+
 func handleShutdown() {
 	if *cpuprofile != "" {
 		pprof.StopCPUProfile()
@@ -59,6 +76,8 @@ func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 		handleListServices(conn, req)
 	case "list-connections":
 		handleListConnections(conn, req)
+	case "get-log":
+		handleGetLogs(conn, req)
 	case "shutdown":
 		handleShutdown()
 	default:
