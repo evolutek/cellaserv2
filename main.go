@@ -114,6 +114,7 @@ func serve() {
 	ln, err := net.Listen("tcp", ":4201")
 	if err != nil {
 		log.Error("[Net] Could not listen: %s", err)
+		return
 	}
 	defer ln.Close()
 
