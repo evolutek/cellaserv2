@@ -4,8 +4,11 @@ import (
 	"bitbucket.org/evolutek/gocellaserv-protobuf"
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
+	"flag"
 	"fmt"
 	"net"
+	"os"
+	"runtime/pprof"
 )
 
 // Currently connected services
@@ -17,7 +20,7 @@ var subscriberMap map[string][]net.Conn
 // Manage incoming connexions
 func handle(conn net.Conn) {
 	remoteAddr := conn.RemoteAddr()
-	log.Info("[Net] New connection: %s", remoteAddr)
+	log.Info("[Net] New %s", remoteAddr)
 
 	// Handle all messages received on this connection
 	for {
@@ -129,12 +132,26 @@ func serve() {
 	}
 }
 
+var cpuprofile = flag.String("cpuprofile", "", "write CPU profile to file")
+
 func main() {
 	// Initialize our maps
 	services = make(map[string]map[string]*Service)
 	servicesConn = make(map[net.Conn][]*Service)
 	reqIds = make(map[uint64]*RequestTimer)
 	subscriberMap = make(map[string][]net.Conn)
+
+	flag.Parse()
+
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+	}
+
+	logSetup()
 
 	// Setup dumping
 	err := dumpSetup()
