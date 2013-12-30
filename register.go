@@ -19,12 +19,12 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 	// Check duplicate
 	if s, ok := services[name][ident]; ok {
 		log.Warning("[Services] Replace %s", s)
-		sc := servicesConn[s.conn]
+		sc := servicesConn[s.Conn]
 		for i, ss := range sc {
-			if ss.name == name && ss.identification == ident {
+			if ss.Name == name && ss.Identification == ident {
 				// Remove from slice
 				sc[i] = sc[len(sc)-1]
-				servicesConn[s.conn] = sc[:len(sc)-1]
+				servicesConn[s.Conn] = sc[:len(sc)-1]
 			}
 		}
 	}

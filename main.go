@@ -34,7 +34,7 @@ func handle(conn net.Conn) {
 	// TODO: notify goroutines waiting for acks for this service
 	for _, s := range servicesConn[conn] {
 		log.Info("[Services] Remove %s", s)
-		delete(services[s.name], s.identification)
+		delete(services[s.Name], s.Identification)
 	}
 
 	log.Info("[Net] Connection closed: %s", remoteAddr)
@@ -143,8 +143,6 @@ func main() {
 	}
 
 	serve()
-
-	// Will add internal "cellaserv" service setup here
 }
 
 // vim: set nowrap tw=100 noet sw=8:
