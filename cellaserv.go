@@ -4,11 +4,13 @@ import (
 	"bitbucket.org/evolutek/gocellaserv-protobuf"
 	"encoding/json"
 	"net"
+	"os"
+	"runtime/pprof"
 )
 
 type ServiceJSON struct {
-	Conn string
-	Name string
+	Conn           string
+	Name           string
 	Identification string
 }
 
@@ -43,15 +45,35 @@ func handleListConnections(conn net.Conn, req *cellaserv.Request) {
 	sendReply(conn, req, data)
 }
 
-func handleCellaservRequest(conn net.Conn, req *cellaserv.Request) {
+func handleShutdown() {
+	if *cpuprofile != "" {
+		pprof.StopCPUProfile()
+	}
+
+	os.Exit(0)
+}
+
+func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 	switch *req.Method {
 	case "list-services":
 		handleListServices(conn, req)
 	case "list-connections":
 		handleListConnections(conn, req)
+	case "shutdown":
+		handleShutdown()
 	default:
 		sendReplyError(conn, req, cellaserv.Reply_Error_NoSuchMethod)
 	}
+}
+
+func cellaservLog(pub *cellaserv.Publish) {
+	if pub.Data == nil {
+		log.Warning("[Log] %s does not have data", *pub.Event)
+		return
+	}
+	data := string(pub.Data)
+	event := (*pub.Event)[4:]
+	logEvent(event, data)
 }
 
 // vim: set nowrap tw=100 noet sw=8:

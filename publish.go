@@ -3,11 +3,18 @@ package main
 import (
 	"bitbucket.org/evolutek/gocellaserv-protobuf"
 	"net"
+	"strings"
 )
 
 func handlePublish(conn net.Conn, msgLen uint32, msgBytes []byte, pub *cellaserv.Publish) {
-	log.Info("[Publish] %s publishes %s", conn.RemoteAddr(), *pub.Event)
-	for _, pub := range subscriberMap[*pub.Event] {
+	event := pub.Event
+	log.Info("[Publish] %s publishes %s", conn.RemoteAddr(), *event)
+
+	if strings.HasPrefix(*event, "log.") {
+		cellaservLog(pub)
+	}
+
+	for _, pub := range subscriberMap[*event] {
 		sendRawMessageLen(pub, msgLen, msgBytes)
 	}
 }

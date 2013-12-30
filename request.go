@@ -28,7 +28,7 @@ func handleRequest(conn net.Conn, msgLen uint32, msgRaw []byte, req *cellaserv.R
 	}
 
 	if *name == "cellaserv" {
-		handleCellaservRequest(conn, req)
+		cellaservRequest(conn, req)
 		return
 	}
 
@@ -70,7 +70,7 @@ func handleRequest(conn net.Conn, msgLen uint32, msgRaw []byte, req *cellaserv.R
 	// The ID is used to track the sender of the request
 	reqIds[*id] = &RequestTimer{conn, timer}
 
-	log.Debug("[Request] Forwarding request to %s", srvc)
+	log.Debug("[Request] Forwarding to %s", srvc)
 	sendRawMessageLen(srvc.Conn, msgLen, msgRaw)
 }
 
