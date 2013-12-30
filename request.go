@@ -43,7 +43,7 @@ func handleRequest(conn net.Conn, msgLen uint32, msgRaw []byte, req *cellaserv.R
 	}
 
 	idents, ok := services[*name]
-	if !ok {
+	if !ok || len(idents) == 0 {
 		log.Warning("[Request] id:%d No such service: %s", *id, *name)
 		replyError(conn, id, cellaserv.Reply_Error_NoSuchService)
 		return
