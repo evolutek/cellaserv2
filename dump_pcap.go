@@ -2,8 +2,10 @@ package main
 
 import (
 	"bitbucket.org/evolutek/gocellaserv-protobuf"
+	"bufio"
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
+	"flag"
 	"net"
 	"os"
 	"time"
@@ -27,16 +29,20 @@ type PacketHeader struct {
 	OrigLen uint32
 }
 
-// Not bufferized
-var dumpFile *os.File
+var dumpFile *bufio.Writer
+var dumpFlag = flag.String("dump-file", "", "Dump messages in FILE")
 
 func dumpSetup() error {
-	// do not use :=, it would shadow the global dumpFile variable
-	var err error
-	dumpFile, err = os.Create("cellaserv.dump")
+	if *dumpFlag == "" {
+		// No dump
+		return nil
+	}
+
+	file, err := os.Create(*dumpFlag)
 	if err != nil {
 		return err
 	}
+	dumpFile = bufio.NewWriter(file)
 
 	// Write PCAP header
 	header := PcapHeader{0xa1b2c3d4, 2, 4, 0, 0, 65535, 4200}
@@ -46,15 +52,19 @@ func dumpSetup() error {
 }
 
 func dumpOutgoing(msg []byte) {
-	sender := "cellaserv"
-	logMsg := &cellaserv.LogMessage{Sender: &sender, Content: msg}
-	dumpLogMessage(logMsg)
+	if dumpFile != nil {
+		sender := "cellaserv"
+		logMsg := &cellaserv.LogMessage{Sender: &sender, Content: msg}
+		dumpLogMessage(logMsg)
+	}
 }
 
 func dumpIncoming(conn net.Conn, msg []byte) {
-	addr := conn.RemoteAddr().String()
-	logMsg := &cellaserv.LogMessage{Sender: &addr, Content: msg}
-	dumpLogMessage(logMsg)
+	if dumpFile != nil {
+		addr := conn.RemoteAddr().String()
+		logMsg := &cellaserv.LogMessage{Sender: &addr, Content: msg}
+		dumpLogMessage(logMsg)
+	}
 }
 
 func dumpLogMessage(msg *cellaserv.LogMessage) {
