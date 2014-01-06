@@ -9,7 +9,7 @@ import (
 func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 	name := msg.GetName()
 	ident := msg.GetIdentification()
-	service := &Service{conn, name, ident}
+	service := newService(conn, name, ident)
 	log.Info("[Services] New %s", service)
 
 	if _, ok := services[name]; !ok {

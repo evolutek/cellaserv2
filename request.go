@@ -11,7 +11,7 @@ type RequestTimer struct {
 	timer  *time.Timer
 }
 
-func handleRequest(conn net.Conn, msgLen uint32, msgRaw []byte, req *cellaserv.Request) {
+func handleRequest(conn net.Conn, msgRaw []byte, req *cellaserv.Request) {
 	log.Info("[Request] Incoming from %s", conn.RemoteAddr())
 
 	// Runtime checks in Get*() functions are useless
@@ -71,7 +71,7 @@ func handleRequest(conn net.Conn, msgLen uint32, msgRaw []byte, req *cellaserv.R
 	reqIds[*id] = &RequestTimer{conn, timer}
 
 	log.Debug("[Request] Forwarding to %s", srvc)
-	sendRawMessageLen(srvc.Conn, msgLen, msgRaw)
+	srvc.sendMessage(msgRaw)
 }
 
 // vim: set nowrap tw=100 noet sw=8:
