@@ -11,6 +11,9 @@ import (
 	"runtime/pprof"
 )
 
+var sockPortFlag = flag.String("port", "", "listening port")
+var sockAddrListen = ":4200"
+
 // Currently connected services
 var services map[string]map[string]*Service
 var servicesConn map[net.Conn][]*Service
@@ -66,10 +69,10 @@ func handleMessage(conn net.Conn) (bool, error) {
 		return false, fmt.Errorf("Could not unmarshal message:", err)
 	}
 
-	switch msg.GetType() {
+	switch *msg.Type {
 	case cellaserv.Message_Register:
 		register := &cellaserv.Register{}
-		err = proto.Unmarshal(msg.GetContent(), register)
+		err = proto.Unmarshal(msg.Content, register)
 		if err != nil {
 			return false, fmt.Errorf("Could not unmarshal register:", err)
 		}
@@ -77,15 +80,15 @@ func handleMessage(conn net.Conn) (bool, error) {
 		return false, nil
 	case cellaserv.Message_Request:
 		request := &cellaserv.Request{}
-		err = proto.Unmarshal(msg.GetContent(), request)
+		err = proto.Unmarshal(msg.Content, request)
 		if err != nil {
 			return false, fmt.Errorf("Could not unmarshal request:", err)
 		}
-		handleRequest(conn, msgLen, msgBytes, request)
+		handleRequest(conn, msgBytes, request)
 		return false, nil
 	case cellaserv.Message_Reply:
 		reply := &cellaserv.Reply{}
-		err = proto.Unmarshal(msg.GetContent(), reply)
+		err = proto.Unmarshal(msg.Content, reply)
 		if err != nil {
 			return false, fmt.Errorf("Could not unmarshal reply:", err)
 		}
@@ -93,7 +96,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 		return false, nil
 	case cellaserv.Message_Subscribe:
 		sub := &cellaserv.Subscribe{}
-		err = proto.Unmarshal(msg.GetContent(), sub)
+		err = proto.Unmarshal(msg.Content, sub)
 		if err != nil {
 			return false, fmt.Errorf("Could not unmarshal subscribe:", err)
 		}
@@ -101,25 +104,27 @@ func handleMessage(conn net.Conn) (bool, error) {
 		return false, nil
 	case cellaserv.Message_Publish:
 		pub := &cellaserv.Publish{}
-		err = proto.Unmarshal(msg.GetContent(), pub)
+		err = proto.Unmarshal(msg.Content, pub)
 		if err != nil {
 			return false, fmt.Errorf("Could not unmarshal publish:", err)
 		}
 		handlePublish(conn, msgLen, msgBytes, pub)
 		return false, nil
 	default:
-		return false, fmt.Errorf("Unknown message type: %d", msg.GetType())
+		return false, fmt.Errorf("Unknown message type: %d", *msg.Type)
 	}
 }
 
 // Start listening and receiving connections
 func serve() {
-	ln, err := net.Listen("tcp", ":4201")
+	ln, err := net.Listen("tcp", sockAddrListen)
 	if err != nil {
 		log.Error("[Net] Could not listen: %s", err)
 		return
 	}
 	defer ln.Close()
+
+	log.Info("[Net] Listening on %s", sockAddrListen)
 
 	for {
 		conn, err := ln.Accept()
@@ -134,14 +139,19 @@ func serve() {
 
 var cpuprofile = flag.String("cpuprofile", "", "write CPU profile to file")
 
-func main() {
+func setup() {
 	// Initialize our maps
 	services = make(map[string]map[string]*Service)
 	servicesConn = make(map[net.Conn][]*Service)
 	reqIds = make(map[uint64]*RequestTimer)
 	subscriberMap = make(map[string][]net.Conn)
 
+	logPreSetup()
+
+	// Parse arguments
 	flag.Parse()
+
+	settingsSetup()
 
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
@@ -158,7 +168,10 @@ func main() {
 	if err != nil {
 		log.Error("Could not setup dump: %s", err)
 	}
+}
 
+func main() {
+	setup()
 	serve()
 }
 
