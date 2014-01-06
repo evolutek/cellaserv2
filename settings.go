@@ -23,7 +23,7 @@ func setLogLevelFromString(lvl string) {
 	case "2":
 		logLevel = logging.DEBUG
 	default:
-		log.Warning("[Config] Unknown debug value: %s", cfg.Cellaserv.Debug)
+		log.Warning("[Config] Unknown debug value: %s", lvl)
 	}
 }
 
