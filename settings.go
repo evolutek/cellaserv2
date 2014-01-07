@@ -36,8 +36,7 @@ func setSockAddrListenFromString(addr string) {
 func settingsSetup() {
 	err := gcfg.ReadFileInto(&cfg, "/etc/conf.d/cellaserv")
 	if err != nil {
-		log.Debug("[Config] Could not read or parse '/etc/conf.d/cellaserv'",
-			err)
+		log.Debug("[Config] %s", err)
 		return
 	}
 
