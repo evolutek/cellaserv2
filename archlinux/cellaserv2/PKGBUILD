@@ -1,0 +1,28 @@
+# Maintainer: Rémi Audebert <contact@halfr.net>
+
+pkgname=cellaserv2
+pkgver=1
+pkgrel=1
+pkgdesc="cellaserv2 rpc broker"
+arch=('x86_64' 'i686' 'arm')
+url="http://code.evolutek.org/$pkgname"
+license=('beerware')
+makedepends=('go')
+options=('!strip' '!emptydirs')
+source=("http://code.evolutek.org/releases/$pkgname/$pkgname-$pkgver.tar.xz")
+md5sums=() # makepkg -g
+
+build() {
+  cd "$pkgname-$pkgver"
+  GOPATH="$srcdir"
+  go get -d -v
+  go build -v
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 "$pkgname-$pkgver" "$pkgdir/usr/bin/$pkgname"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+# vim:set ts=2 sw=2 et:
