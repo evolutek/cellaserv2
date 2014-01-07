@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bitbucket.org/evolutek/gocellaserv-protobuf"
+	"bitbucket.org/evolutek/cellaserv2-protobuf"
 	"bufio"
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
