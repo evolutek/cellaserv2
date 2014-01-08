@@ -1,0 +1,8 @@
+[Unit]
+Description=Cellaserv2 RPC
+PartOf=evolutek.target
+
+[Service]
+Restart=always
+User=evolutek
+ExecStart=/usr/bin/cellaserv2
