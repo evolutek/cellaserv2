@@ -11,6 +11,11 @@ var cfg struct {
 		Debug string
 		Port  string
 	}
+	Client struct {
+		Debug string
+		Host  string
+		Port  string
+	}
 }
 
 func setLogLevelFromString(lvl string) {

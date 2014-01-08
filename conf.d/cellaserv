@@ -1,0 +1,8 @@
+[cellaserv]
+debug = 0
+port = 4200
+
+[client]
+debug = 0
+host = evolutek.org
+port = 4200
