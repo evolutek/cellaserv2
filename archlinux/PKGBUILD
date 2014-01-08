@@ -19,9 +19,8 @@ pkgver() {
 
 build() {
   cd "$srcdir/$pkgname"
-  GOPATH="$srcdir"
-  go get -d -v
-  go build -v
+  GOPATH="$srcdir" go get -d -v
+  GOPATH="$srcdir" go build -v
 }
 
 package() {
