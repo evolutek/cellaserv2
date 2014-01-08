@@ -15,6 +15,12 @@ type Service struct {
 	buf bytes.Buffer
 }
 
+type ServiceJSON struct {
+	Conn           string
+	Name           string
+	Identification string
+}
+
 func newService(conn net.Conn, name string, ident string) *Service {
 	var buf bytes.Buffer
 	s := &Service{conn, name, ident, buf}
@@ -23,6 +29,14 @@ func newService(conn net.Conn, name string, ident string) *Service {
 
 func (s *Service) String() string {
 	return fmt.Sprintf("{Service %s[%s] at %s}", s.Name, s.Identification, s.Conn.RemoteAddr())
+}
+
+func (s *Service) JSONStruct() *ServiceJSON {
+	return &ServiceJSON{
+		Conn:           s.Conn.RemoteAddr().String(),
+		Name:           s.Name,
+		Identification: s.Identification,
+	}
 }
 
 func (s *Service) sendMessage(msg []byte) {

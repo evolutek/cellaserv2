@@ -2,8 +2,11 @@ package main
 
 import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
+	"encoding/json"
 	"net"
 )
+
+var logNewService = "log.new-service"
 
 // Add service to service map
 func handleRegister(conn net.Conn, msg *cellaserv.Register) {
@@ -27,10 +30,13 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 				servicesConn[s.Conn] = sc[:len(sc)-1]
 			}
 		}
+	} else {
+		pub, _ := json.Marshal(service.JSONStruct())
+		cellaservPublish(&logNewService, pub)
 	}
 	services[name][ident] = service
 
-	// Keep track of origin connexion in order to remove when the connexion is closed
+	// Keep track of origin connection in order to remove when the connection is closed
 	servicesConn[conn] = append(servicesConn[conn], service)
 }
 

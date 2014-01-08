@@ -2,6 +2,7 @@ package main
 
 import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
+	"code.google.com/p/goprotobuf/proto"
 	"encoding/json"
 	"io/ioutil"
 	"net"
@@ -9,21 +10,11 @@ import (
 	"runtime/pprof"
 )
 
-type ServiceJSON struct {
-	Conn           string
-	Name           string
-	Identification string
-}
-
 func handleListServices(conn net.Conn, req *cellaserv.Request) {
 	var servicesList []*ServiceJSON
 	for _, names := range services {
 		for _, s := range names {
-			servicesList = append(servicesList, &ServiceJSON{
-				s.Conn.RemoteAddr().String(),
-				s.Name,
-				s.Identification,
-			})
+			servicesList = append(servicesList, s.JSONStruct())
 		}
 	}
 
@@ -93,6 +84,27 @@ func cellaservLog(pub *cellaserv.Publish) {
 	data := string(pub.Data)
 	event := (*pub.Event)[4:]
 	logEvent(event, data)
+}
+
+func cellaservPublish(event *string, data []byte) {
+	pub := &cellaserv.Publish{Event: event}
+	if data != nil {
+		pub.Data = data
+	}
+	pubBytes, err := proto.Marshal(pub)
+	if err != nil {
+		log.Error("[Cellaserv] Could not marshal event")
+		return
+	}
+	msgType := cellaserv.Message_Publish
+	msg := &cellaserv.Message{Type: &msgType, Content: pubBytes}
+	msgBytes, err := proto.Marshal(msg)
+	if err != nil {
+		log.Error("[Cellaserv] Could not marshal event")
+		return
+	}
+
+	doPublish(uint32(len(msgBytes)), msgBytes, pub)
 }
 
 // vim: set nowrap tw=100 noet sw=8:

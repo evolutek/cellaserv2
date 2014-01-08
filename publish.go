@@ -7,14 +7,18 @@ import (
 )
 
 func handlePublish(conn net.Conn, msgLen uint32, msgBytes []byte, pub *cellaserv.Publish) {
-	event := pub.Event
-	log.Info("[Publish] %s publishes %s", conn.RemoteAddr(), *event)
+	log.Info("[Publish] %s publishes %s", conn.RemoteAddr(), *pub.Event)
+	doPublish(msgLen, msgBytes, pub)
+}
 
+func doPublish(msgLen uint32, msgBytes []byte, pub *cellaserv.Publish) {
+	event := pub.Event
 	if strings.HasPrefix(*event, "log.") {
 		cellaservLog(pub)
 	}
 
 	for _, pub := range subscriberMap[*event] {
+		dumpOutgoing(msgBytes)
 		sendRawMessageLen(pub, msgLen, msgBytes)
 	}
 }
