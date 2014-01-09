@@ -20,10 +20,14 @@ var servicesConn map[net.Conn][]*Service
 var reqIds map[uint64]*RequestTimer
 var subscriberMap map[string][]net.Conn
 
+var logNewConnection = "log.new-connection"
+var logCloseConnection = "log.close-connection"
+
 // Manage incoming connexions
 func handle(conn net.Conn) {
 	remoteAddr := conn.RemoteAddr()
 	log.Info("[Net] New %s", remoteAddr)
+	cellaservPublish(&logNewConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
 
 	// Handle all messages received on this connection
 	for {
@@ -44,6 +48,7 @@ func handle(conn net.Conn) {
 	}
 
 	log.Info("[Net] Connection closed: %s", remoteAddr)
+	cellaservPublish(&logCloseConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
 }
 
 func handleMessage(conn net.Conn) (bool, error) {
