@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
@@ -22,6 +23,7 @@ var subscriberMap map[string][]net.Conn
 
 var logNewConnection = "log.new-connection"
 var logCloseConnection = "log.close-connection"
+var logLostService = "log.lost-service"
 
 // Manage incoming connexions
 func handle(conn net.Conn) {
@@ -44,6 +46,8 @@ func handle(conn net.Conn) {
 	// TODO: notify goroutines waiting for acks for this service
 	for _, s := range servicesConn[conn] {
 		log.Info("[Services] Remove %s", s)
+		pub, _ := json.Marshal(s.JSONStruct())
+		cellaservPublish(&logLostService, pub)
 		delete(services[s.Name], s.Identification)
 	}
 
