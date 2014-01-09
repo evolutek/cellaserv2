@@ -51,6 +51,8 @@ func handle(conn net.Conn) {
 		delete(services[s.Name], s.Identification)
 	}
 
+	delete(servicesConn, conn)
+
 	log.Info("[Net] Connection closed: %s", remoteAddr)
 	cellaservPublish(&logCloseConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
 }
