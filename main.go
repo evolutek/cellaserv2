@@ -57,12 +57,20 @@ func handle(conn net.Conn) {
 	cellaservPublish(&logCloseConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
 }
 
+func logUnmarshalError(msg []byte) {
+	dbg := ""
+	for _, b := range msg {
+		dbg = dbg + fmt.Sprintf("0x%02X ", b)
+	}
+	log.Error("[Net] Bad message: %s", dbg)
+}
+
 func handleMessage(conn net.Conn) (bool, error) {
 	// Read message length as uint32
 	var msgLen uint32
 	err := binary.Read(conn, binary.BigEndian, &msgLen)
 	if err != nil {
-		return true, fmt.Errorf("Could not read message length:", err)
+		return true, fmt.Errorf("Could not read message length: %s", err)
 	}
 
 	msgBytes := make([]byte, msgLen)
@@ -77,7 +85,8 @@ func handleMessage(conn net.Conn) (bool, error) {
 	msg := &cellaserv.Message{}
 	err = proto.Unmarshal(msgBytes, msg)
 	if err != nil {
-		return false, fmt.Errorf("Could not unmarshal message:", err)
+		logUnmarshalError(msgBytes)
+		return false, fmt.Errorf("Could not unmarshal message: %s", err)
 	}
 
 	switch *msg.Type {
@@ -85,7 +94,8 @@ func handleMessage(conn net.Conn) (bool, error) {
 		register := &cellaserv.Register{}
 		err = proto.Unmarshal(msg.Content, register)
 		if err != nil {
-			return false, fmt.Errorf("Could not unmarshal register:", err)
+			logUnmarshalError(msg.Content)
+			return false, fmt.Errorf("Could not unmarshal register: %s", err)
 		}
 		handleRegister(conn, register)
 		return false, nil
@@ -93,6 +103,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 		request := &cellaserv.Request{}
 		err = proto.Unmarshal(msg.Content, request)
 		if err != nil {
+			logUnmarshalError(msg.Content)
 			return false, fmt.Errorf("Could not unmarshal request:", err)
 		}
 		handleRequest(conn, msgBytes, request)
@@ -101,6 +112,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 		reply := &cellaserv.Reply{}
 		err = proto.Unmarshal(msg.Content, reply)
 		if err != nil {
+			logUnmarshalError(msg.Content)
 			return false, fmt.Errorf("Could not unmarshal reply:", err)
 		}
 		handleReply(conn, msgLen, msgBytes, reply)
@@ -109,6 +121,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 		sub := &cellaserv.Subscribe{}
 		err = proto.Unmarshal(msg.Content, sub)
 		if err != nil {
+			logUnmarshalError(msg.Content)
 			return false, fmt.Errorf("Could not unmarshal subscribe:", err)
 		}
 		handleSubscribe(conn, sub)
@@ -117,6 +130,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 		pub := &cellaserv.Publish{}
 		err = proto.Unmarshal(msg.Content, pub)
 		if err != nil {
+			logUnmarshalError(msg.Content)
 			return false, fmt.Errorf("Could not unmarshal publish:", err)
 		}
 		handlePublish(conn, msgLen, msgBytes, pub)
