@@ -30,6 +30,7 @@ package() {
   install -Dm644 conf.d/cellaserv "$pkgdir/etc/conf.d/cellaserv"
   install -Dm644 systemd/cellaserv2.service "$pkgdir/usr/lib/systemd/system/cellaserv2.service"
   install -Dm644 systemd/evolutek.target "$pkgdir/usr/lib/systemd/system/evolutek.target"
+  mkdir -p "$pkgdir/var/log/cellaserv"
 }
 
 # vim:set ts=2 sw=2 et:
