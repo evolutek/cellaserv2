@@ -39,7 +39,7 @@ func logSetupFile(what string) (l *golog.Logger) {
 		logFilename := *logRootDirectory + "/" + what + ".log"
 		logFd, err := os.Create(logFilename)
 		if err != nil {
-			log.Error("[Log] Could not create log file:", logFilename)
+			log.Error("[Log] Could not create log file: %s", logFilename)
 			return
 		}
 		l = golog.New(logFd, what, golog.LstdFlags)
@@ -53,6 +53,9 @@ func logEvent(event string, what string) {
 	logger, ok := servicesLogs[event]
 	if !ok {
 		logger = logSetupFile(event)
+		if logger == nil {
+			return
+		}
 	}
 	logger.Println(what)
 }
