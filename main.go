@@ -37,7 +37,7 @@ var logLostService = "log.lost-service"
 // Manage incoming connexions
 func handle(conn net.Conn) {
 	remoteAddr := conn.RemoteAddr()
-	log.Info("[Net] New connection: %s", remoteAddr)
+	log.Info("[Net] Connection opened: %s", remoteAddr)
 	cellaservPublish(logNewConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
 
 	// Append to list of handled connections
@@ -212,11 +212,12 @@ func setup() {
 
 	settingsSetup()
 
+	// Enable CPU profiling, stopped when cellaserv receive the kill request
 	setupProfiling()
 
 	logSetup()
 
-	// Setup dumping
+	// Setup pcap dumping of all packets
 	err := dumpSetup()
 	if err != nil {
 		log.Error("Could not setup dump: %s", err)
