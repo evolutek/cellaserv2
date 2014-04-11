@@ -18,6 +18,7 @@ func doPublish(msgLen uint32, msgBytes []byte, pub *cellaserv.Publish) {
 	}
 
 	for _, pub := range subscriberMap[*event] {
+		log.Debug("[Publish] Forwarding publish to %s", pub.RemoteAddr())
 		dumpOutgoing(msgBytes)
 		sendRawMessageLen(pub, msgLen, msgBytes)
 	}
