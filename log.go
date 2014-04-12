@@ -37,7 +37,7 @@ func logSetupFile(what string) (l *golog.Logger) {
 	l, ok := servicesLogs[what]
 	if !ok {
 		logFilename := *logRootDirectory + "/" + what + ".log"
-		logFd, err := os.Create(logFilename)
+		logFd, err := os.OpenFile(logFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 		if err != nil {
 			log.Error("[Log] Could not create log file: %s", logFilename)
 			return
