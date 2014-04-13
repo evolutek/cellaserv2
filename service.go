@@ -31,6 +31,7 @@ func (s *Service) String() string {
 	return fmt.Sprintf("{Service %s[%s] at %s}", s.Name, s.Identification, s.Conn.RemoteAddr())
 }
 
+// JSONStruct creates a struc good for JSON encoding.
 func (s *Service) JSONStruct() *ServiceJSON {
 	return &ServiceJSON{
 		Conn:           s.Conn.RemoteAddr().String(),
@@ -41,8 +42,11 @@ func (s *Service) JSONStruct() *ServiceJSON {
 
 func (s *Service) sendMessage(msg []byte) {
 	s.buf.Reset()
+	// Write the size of the message
 	binary.Write(&s.buf, binary.BigEndian, uint32(len(msg)))
+	// Concatenate with message content
 	s.buf.Write(msg)
+	// Send the whole message at once
 	s.Conn.Write(s.buf.Bytes())
 }
 
