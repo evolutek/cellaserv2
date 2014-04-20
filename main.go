@@ -8,8 +8,6 @@ import (
 	"flag"
 	"fmt"
 	"net"
-	"os"
-	"runtime/pprof"
 )
 
 var sockPortFlag = flag.String("port", "", "listening port")
@@ -162,8 +160,6 @@ func serve() {
 	}
 }
 
-var cpuprofile = flag.String("cpuprofile", "", "write CPU profile to file")
-
 func setup() {
 	// Initialize our maps
 	services = make(map[string]map[string]*Service)
@@ -178,13 +174,7 @@ func setup() {
 
 	settingsSetup()
 
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		pprof.StartCPUProfile(f)
-	}
+	setupProfiling()
 
 	logSetup()
 

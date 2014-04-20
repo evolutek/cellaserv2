@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	"runtime/pprof"
 )
 
 func handleListServices(conn net.Conn, req *cellaserv.Request) {
@@ -54,10 +53,7 @@ func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 }
 
 func handleShutdown() {
-	if *cpuprofile != "" {
-		pprof.StopCPUProfile()
-	}
-
+	stopProfiling()
 	os.Exit(0)
 }
 
