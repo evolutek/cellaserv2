@@ -27,7 +27,7 @@ var logLostService = "log.lost-service"
 func handle(conn net.Conn) {
 	remoteAddr := conn.RemoteAddr()
 	log.Info("[Net] New %s", remoteAddr)
-	cellaservPublish(&logNewConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
+	cellaservPublish(logNewConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
 
 	// Handle all messages received on this connection
 	for {
@@ -45,14 +45,14 @@ func handle(conn net.Conn) {
 	for _, s := range servicesConn[conn] {
 		log.Info("[Services] Remove %s", s)
 		pub, _ := json.Marshal(s.JSONStruct())
-		cellaservPublish(&logLostService, pub)
+		cellaservPublish(logLostService, pub)
 		delete(services[s.Name], s.Identification)
 	}
 
 	delete(servicesConn, conn)
 
 	log.Info("[Net] Connection closed: %s", remoteAddr)
-	cellaservPublish(&logCloseConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
+	cellaservPublish(logCloseConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
 }
 
 func logUnmarshalError(msg []byte) {

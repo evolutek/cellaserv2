@@ -82,8 +82,8 @@ func cellaservLog(pub *cellaserv.Publish) {
 	logEvent(event, data)
 }
 
-func cellaservPublish(event *string, data []byte) {
-	pub := &cellaserv.Publish{Event: event}
+func cellaservPublish(event string, data []byte) {
+	pub := &cellaserv.Publish{Event: &event}
 	if data != nil {
 		pub.Data = data
 	}

@@ -32,7 +32,7 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 		}
 	} else {
 		pub, _ := json.Marshal(service.JSONStruct())
-		cellaservPublish(&logNewService, pub)
+		cellaservPublish(logNewService, pub)
 	}
 	services[name][ident] = service
 
