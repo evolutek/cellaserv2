@@ -7,20 +7,40 @@ import (
 	"os"
 )
 
-// Setup log
+// log is the main cellaserv logger, use it everywhere you want!
 var log *logging.Logger
 
+// Default log level
 var logLevel = logging.WARNING
+
+// Command line flags
 var logRootDirectory = flag.String("log-root", ".", "root directory of logs")
 var logLevelFlag = flag.String("log-level", "", "logger verbosity")
+var logToFile = flag.String("log-file", "", "log to custom file instead of stderr")
 
+// Map of the logger associated with a service
 var servicesLogs map[string]*golog.Logger
 
-// Setup that must be done before any log is made
+// Setup that must be done before any log is made. Command line arguments parsing must be done
+// before calling logPreSetup()
 func logPreSetup() {
 	format := logging.MustStringFormatter("%{level:-7s} %{time:Jan _2 15:04:05.000} %{message}")
 
-	logBackend := logging.NewLogBackend(os.Stderr, "", 0)
+	var logBackend *logging.LogBackend
+	if *logToFile != "" {
+		// Use has specified a log file to use
+		logFile, err := os.OpenFile(*logToFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			golog.Println(err)
+			golog.Println("Falling back on log on stderr")
+			logBackend = logging.NewLogBackend(os.Stderr, "", 0)
+		} else {
+			logBackend = logging.NewLogBackend(logFile, "", 0)
+		}
+	} else {
+		// Log on stderr
+		logBackend = logging.NewLogBackend(os.Stderr, "", 0)
+	}
 	logBackend.Color = true
 	logging.SetBackend(logBackend)
 

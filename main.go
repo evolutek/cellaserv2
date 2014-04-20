@@ -167,10 +167,11 @@ func setup() {
 	reqIds = make(map[uint64]*RequestTimer)
 	subscriberMap = make(map[string][]net.Conn)
 
-	logPreSetup()
-
-	// Parse arguments
+	// Parse command line arguments
 	flag.Parse()
+
+	// Setup cellaserv log
+	logPreSetup()
 
 	settingsSetup()
 
