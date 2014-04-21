@@ -74,7 +74,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 	msgBytes := make([]byte, msgLen)
 	_, err = conn.Read(msgBytes)
 	if err != nil {
-		return true, fmt.Errorf("Could not read message:", err)
+		return true, fmt.Errorf("Could not read message: %s", err)
 	}
 
 	// Dump raw msg to log
@@ -102,7 +102,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 		err = proto.Unmarshal(msg.Content, request)
 		if err != nil {
 			logUnmarshalError(msg.Content)
-			return false, fmt.Errorf("Could not unmarshal request:", err)
+			return false, fmt.Errorf("Could not unmarshal request: %s", err)
 		}
 		handleRequest(conn, msgBytes, request)
 		return false, nil
@@ -111,7 +111,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 		err = proto.Unmarshal(msg.Content, reply)
 		if err != nil {
 			logUnmarshalError(msg.Content)
-			return false, fmt.Errorf("Could not unmarshal reply:", err)
+			return false, fmt.Errorf("Could not unmarshal reply: %s", err)
 		}
 		handleReply(conn, msgLen, msgBytes, reply)
 		return false, nil
@@ -120,7 +120,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 		err = proto.Unmarshal(msg.Content, sub)
 		if err != nil {
 			logUnmarshalError(msg.Content)
-			return false, fmt.Errorf("Could not unmarshal subscribe:", err)
+			return false, fmt.Errorf("Could not unmarshal subscribe: %s", err)
 		}
 		handleSubscribe(conn, sub)
 		return false, nil
@@ -129,7 +129,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 		err = proto.Unmarshal(msg.Content, pub)
 		if err != nil {
 			logUnmarshalError(msg.Content)
-			return false, fmt.Errorf("Could not unmarshal publish:", err)
+			return false, fmt.Errorf("Could not unmarshal publish: %s", err)
 		}
 		handlePublish(conn, msgLen, msgBytes, pub)
 		return false, nil
