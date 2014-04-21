@@ -2,11 +2,13 @@ package main
 
 import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
+	"bytes"
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/json"
 	"io/ioutil"
 	"net"
 	"os"
+	"path/filepath"
 )
 
 func handleListServices(conn net.Conn, req *cellaserv.Request) {
@@ -31,27 +33,43 @@ func handleListConnections(conn net.Conn, req *cellaserv.Request) {
 	}
 	data, err := json.Marshal(conns)
 	if err != nil {
-		log.Error("[Cellaserv] Could not marshal the connecions")
+		log.Error("[Cellaserv] Could not marshal the connections")
 	}
 	sendReply(conn, req, data)
 }
 
+// handleGetLogs reply with the logs
 func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 	if req.Data == nil {
 		log.Warning("[Cellaserv] Log request does not specify event")
 		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
 		return
 	}
+
 	event := string(req.Data)
-	filename := *logRootDirectory + "/" + event + ".log"
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Warning("[Cellaserv] Could not open log:", filename)
+	pattern := *logRootDirectory + "/" + event + ".log"
+	filenames, err := filepath.Glob(pattern)
+
+	if err != nil || len(filenames) == 0 {
+		log.Warning("[Cellaserv] Log request specified erroneous log: ", err)
 		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+		return
 	}
-	sendReply(conn, req, data)
+
+	var data_buf bytes.Buffer
+
+	for _, filename := range filenames {
+		data, err := ioutil.ReadFile(filename)
+		if err != nil {
+			log.Warning("[Cellaserv] Could not open log:", filename)
+			sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+		}
+		data_buf.Write(data)
+	}
+	sendReply(conn, req, data_buf.Bytes())
 }
 
+// handleShutdown quit cellaserv. Used for debug purposes
 func handleShutdown() {
 	stopProfiling()
 	os.Exit(0)

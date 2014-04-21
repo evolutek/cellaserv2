@@ -30,15 +30,15 @@ type PacketHeader struct {
 }
 
 var dumpFile *bufio.Writer
-var dumpFlag = flag.String("dump-file", "", "Dump messages in FILE")
+var dumpFileFlag = flag.String("dump-file", "", "Dump messages in FILE")
 
 func dumpSetup() error {
-	if *dumpFlag == "" {
+	if *dumpFileFlag == "" {
 		// No dump
 		return nil
 	}
 
-	file, err := os.Create(*dumpFlag)
+	file, err := os.Create(*dumpFileFlag)
 	if err != nil {
 		return err
 	}
@@ -51,10 +51,11 @@ func dumpSetup() error {
 	return err
 }
 
-func dumpOutgoing(msg []byte) {
+func dumpOutgoing(conn net.Conn, msg []byte) {
 	if dumpFile != nil {
 		sender := "cellaserv"
-		logMsg := &cellaserv.LogMessage{Sender: &sender, Content: msg}
+		dest := conn.RemoteAddr().String()
+		logMsg := &cellaserv.LogMessage{Sender: &sender, Destination: &dest, Content: msg}
 		dumpLogMessage(logMsg)
 	}
 }
@@ -62,7 +63,8 @@ func dumpOutgoing(msg []byte) {
 func dumpIncoming(conn net.Conn, msg []byte) {
 	if dumpFile != nil {
 		addr := conn.RemoteAddr().String()
-		logMsg := &cellaserv.LogMessage{Sender: &addr, Content: msg}
+		dest := "cellaserv"
+		logMsg := &cellaserv.LogMessage{Sender: &addr, Destination: &dest, Content: msg}
 		dumpLogMessage(logMsg)
 	}
 }

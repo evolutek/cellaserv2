@@ -5,7 +5,28 @@ import (
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
 	"net"
+	"strings"
 )
+
+// Log utils
+
+// connDesribe returns all the information cellaserv have on the connection
+func connDescribe(conn net.Conn) (ret string) {
+	services, ok := servicesConn[conn]
+	if !ok {
+		// This connection is not associated with a service
+		ret = conn.RemoteAddr().String()
+	} else {
+		var servcs []string
+		for _, srvc := range services {
+			servcs = append(servcs, srvc.String())
+		}
+		ret = strings.Join(servcs, ", ")
+	}
+	return
+}
+
+// Send utils
 
 func sendReply(conn net.Conn, req *cellaserv.Request, data []byte) {
 	rep := &cellaserv.Reply{Id: req.Id, Data: data}
@@ -41,7 +62,7 @@ func sendMessage(conn net.Conn, msg *cellaserv.Message) {
 	if err != nil {
 		log.Error("[Message] Could not marshal outgoing message")
 	}
-	dumpOutgoing(msgBytes)
+	dumpOutgoing(conn, msgBytes)
 
 	msgLen := uint32(len(msgBytes))
 	sendRawMessageLen(conn, msgLen, msgBytes)

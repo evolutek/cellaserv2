@@ -10,15 +10,25 @@ import (
 	"net"
 )
 
+// Command line flags
 var sockPortFlag = flag.String("port", "", "listening port")
 var sockAddrListen = ":4200"
 
-// Currently connected services
+// List of all currently handled connections
+var connList []net.Conn
+
+// Map of currently connected services by name, then identification
 var services map[string]map[string]*Service
+
+// Map of all services associated with a connection
 var servicesConn map[net.Conn][]*Service
+
+// Map of requests ids with associated timeout timer
 var reqIds map[uint64]*RequestTimer
 var subscriberMap map[string][]net.Conn
+var subscriberMatchMap map[string][]net.Conn
 
+// Internal log names
 var logNewConnection = "log.new-connection"
 var logCloseConnection = "log.close-connection"
 var logLostService = "log.lost-service"
@@ -42,6 +52,7 @@ func handle(conn net.Conn) {
 
 	// Remove services registered by this connection
 	// TODO: notify goroutines waiting for acks for this service
+	// TODO: remove service from subscribers lists
 	for _, s := range servicesConn[conn] {
 		log.Info("[Services] Remove %s", s)
 		pub, _ := json.Marshal(s.JSONStruct())
@@ -166,6 +177,7 @@ func setup() {
 	servicesConn = make(map[net.Conn][]*Service)
 	reqIds = make(map[uint64]*RequestTimer)
 	subscriberMap = make(map[string][]net.Conn)
+	subscriberMatchMap = make(map[string][]net.Conn)
 
 	// Parse command line arguments
 	flag.Parse()
