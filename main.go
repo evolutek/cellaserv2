@@ -50,6 +50,8 @@ func handle(conn net.Conn) {
 		}
 	}
 
+	log.Info("[Net] Connection closed: %s", remoteAddr)
+
 	// Remove services registered by this connection
 	// TODO: notify goroutines waiting for acks for this service
 	// TODO: remove service from subscribers lists
@@ -59,10 +61,27 @@ func handle(conn net.Conn) {
 		cellaservPublish(logLostService, pub)
 		delete(services[s.Name], s.Identification)
 	}
-
 	delete(servicesConn, conn)
 
-	log.Info("[Net] Connection closed: %s", remoteAddr)
+	// Remove subscribes from this connection
+	removeConnFromMap := func(subMap map[string][]net.Conn) {
+		for key, subs := range subMap {
+			for i, subConn := range subs {
+				if conn == subConn {
+					// Remove from list of subscribers
+					subs[i] = subs[len(subs)-1]
+					subMap[key] = subs[:len(subs)-1]
+					if len(subs) == 0 {
+						delete(subMap, key)
+						break
+					}
+				}
+			}
+		}
+	}
+	removeConnFromMap(subscriberMap)
+	removeConnFromMap(subscriberMatchMap)
+
 	cellaservPublish(logCloseConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
 }
 
