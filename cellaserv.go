@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 )
 
@@ -47,7 +48,7 @@ func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 	}
 
 	event := string(req.Data)
-	pattern := *logRootDirectory + "/" + event + ".log"
+	pattern := path.Join(*logRootDirectory, logSubDir, event+".log")
 	filenames, err := filepath.Glob(pattern)
 
 	if err != nil || len(filenames) == 0 {
@@ -69,6 +70,26 @@ func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 	sendReply(conn, req, data_buf.Bytes())
 }
 
+func handleLogRotate(conn net.Conn, req *cellaserv.Request) {
+	type logRotateFormat struct {
+		Where string
+	}
+	// Default to time
+	if req.Data == nil {
+		logRotateTimeNow()
+	} else {
+		var data logRotateFormat
+		err := json.Unmarshal(req.Data, &data)
+		if err != nil {
+			log.Warning("[Cellaserv] Could not rotate log, json error: %s", err)
+			sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+			return
+		}
+		logRotateName(data.Where)
+	}
+	sendReply(conn, req, nil)
+}
+
 // handleShutdown quit cellaserv. Used for debug purposes
 func handleShutdown() {
 	stopProfiling()
@@ -83,6 +104,8 @@ func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 		handleListConnections(conn, req)
 	case "get-log":
 		handleGetLogs(conn, req)
+	case "log-rotate":
+		handleLogRotate(conn, req)
 	case "shutdown":
 		handleShutdown()
 	default:

@@ -5,6 +5,8 @@ import (
 	"github.com/op/go-logging"
 	golog "log"
 	"os"
+	"path"
+	"time"
 )
 
 // log is the main cellaserv logger, use it everywhere you want!
@@ -15,6 +17,7 @@ var logLevel = logging.WARNING
 
 // Command line flags
 var logRootDirectory = flag.String("log-root", ".", "root directory of logs")
+var logSubDir string
 var logLevelFlag = flag.String("log-level", "", "logger verbosity")
 var logToFile = flag.String("log-file", "", "log to custom file instead of stderr")
 
@@ -50,13 +53,34 @@ func logPreSetup() {
 
 func logSetup() {
 	logging.SetLevel(logLevel, "cellaserv")
+	// Set default log subDirectory to now
+	logRotateTimeNow()
+}
+
+// logRotateName set the new log subdirectory to name
+func logRotateName(name string) {
+	log.Debug("[Log] Rotating to \"%s\"", name)
+	logSubDir = name
+	logFullDir := path.Join(*logRootDirectory, logSubDir)
+	err := os.MkdirAll(logFullDir, 0755)
+	if err != nil {
+		log.Error("[Log] Could not create log directories, %s: %s", logFullDir, err)
+	}
+	// XXX: close old log files?
 	servicesLogs = make(map[string]*golog.Logger)
+}
+
+// logRotateTimeNow switch the current log subdirectory to current time
+func logRotateTimeNow() {
+	now := time.Now()
+	newSubDir := now.Format(time.Stamp)
+	logRotateName(newSubDir)
 }
 
 func logSetupFile(what string) (l *golog.Logger) {
 	l, ok := servicesLogs[what]
 	if !ok {
-		logFilename := *logRootDirectory + "/" + what + ".log"
+		logFilename := path.Join(*logRootDirectory, logSubDir, what+".log")
 		logFd, err := os.OpenFile(logFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 		if err != nil {
 			log.Error("[Log] Could not create log file: %s", logFilename)
