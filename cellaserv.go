@@ -27,14 +27,16 @@ func handleListServices(conn net.Conn, req *cellaserv.Request) {
 	sendReply(conn, req, data)
 }
 
+// handleListConnections replies with the list of currently connected clients
 func handleListConnections(conn net.Conn, req *cellaserv.Request) {
 	var conns []string
-	for c := range servicesConn {
-		conns = append(conns, c.RemoteAddr().String())
+	for c := connList.Front(); c != nil; c = c.Next() {
+		// Return raw ip:port
+		conns = append(conns, c.Value.(net.Conn).RemoteAddr().String())
 	}
 	data, err := json.Marshal(conns)
 	if err != nil {
-		log.Error("[Cellaserv] Could not marshal the connections")
+		log.Error("[Cellaserv] Could not marshal the connections list")
 	}
 	sendReply(conn, req, data)
 }

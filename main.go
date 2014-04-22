@@ -3,6 +3,7 @@ package main
 import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
 	"code.google.com/p/goprotobuf/proto"
+	"container/list"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
@@ -15,7 +16,7 @@ var sockPortFlag = flag.String("port", "", "listening port")
 var sockAddrListen = ":4200"
 
 // List of all currently handled connections
-var connList []net.Conn
+var connList *list.List
 
 // Map of currently connected services by name, then identification
 var services map[string]map[string]*Service
@@ -36,13 +37,17 @@ var logLostService = "log.lost-service"
 // Manage incoming connexions
 func handle(conn net.Conn) {
 	remoteAddr := conn.RemoteAddr()
-	log.Info("[Net] New %s", remoteAddr)
+	log.Info("[Net] New connection: %s", remoteAddr)
 	cellaservPublish(logNewConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
+
+	// Append to list of handled connections
+	connListElt := connList.PushBack(conn)
 
 	// Handle all messages received on this connection
 	for {
 		closed, err := handleMessage(conn)
 		if closed {
+			log.Info("[Net] Connection closed: %s", remoteAddr)
 			break
 		}
 		if err != nil {
@@ -50,7 +55,8 @@ func handle(conn net.Conn) {
 		}
 	}
 
-	log.Info("[Net] Connection closed: %s", remoteAddr)
+	// Remove from list of handled connection
+	connList.Remove(connListElt)
 
 	// Remove services registered by this connection
 	// TODO: notify goroutines waiting for acks for this service
@@ -196,6 +202,7 @@ func setup() {
 	reqIds = make(map[uint64]*RequestTimer)
 	subscriberMap = make(map[string][]net.Conn)
 	subscriberMatchMap = make(map[string][]net.Conn)
+	connList = list.New()
 
 	// Parse command line arguments
 	flag.Parse()
