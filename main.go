@@ -54,7 +54,6 @@ func handle(conn net.Conn) {
 
 	// Remove services registered by this connection
 	// TODO: notify goroutines waiting for acks for this service
-	// TODO: remove service from subscribers lists
 	for _, s := range servicesConn[conn] {
 		log.Info("[Services] Remove %s", s)
 		pub, _ := json.Marshal(s.JSONStruct())
