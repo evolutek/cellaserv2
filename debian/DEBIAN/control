@@ -1,0 +1,9 @@
+Package: cellaserv2
+Version: {{VERSION}}
+Section: base
+Priority: optional
+Architecture: armel
+Depends:
+Maintainer: Evolutek <evolutek@googlegroups.com>
+Description: Cellaserv2
+ Evolutek's RPC
