@@ -3,6 +3,7 @@ package main
 import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
 	"encoding/json"
+	"fmt"
 	"net"
 )
 
@@ -33,6 +34,8 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 	} else {
 		pub, _ := json.Marshal(service.JSONStruct())
 		cellaservPublish(logNewService, pub)
+		logNewServiceSpecific := fmt.Sprintf("%s.%s", logNewService, name)
+		cellaservPublish(logNewServiceSpecific, pub)
 	}
 	services[name][ident] = service
 
