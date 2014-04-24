@@ -20,7 +20,7 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 		services[name] = make(map[string]*Service)
 	}
 
-	// Check duplicate
+	// Check for duplicate services
 	if s, ok := services[name][ident]; ok {
 		log.Warning("[Services] Replace %s", s)
 		sc := servicesConn[s.Conn]
@@ -32,6 +32,19 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 			}
 		}
 	} else {
+		// Sanity checks
+		if ident == "" {
+			if len(services[name]) >= 1 {
+				log.Warning("[Service] New service have no identification but " +
+					"there is already a service with an identification.")
+			}
+		} else {
+			if _, ok = services[name][""]; ok {
+				log.Warning("[Service] New service have an identification but " +
+					"there is already a service without an identification")
+			}
+		}
+
 		pub, _ := json.Marshal(service.JSONStruct())
 		cellaservPublish(logNewService, pub)
 		logNewServiceSpecific := fmt.Sprintf("%s.%s", logNewService, name)
