@@ -100,12 +100,12 @@ func handleShutdown() {
 
 func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 	switch *req.Method {
-	case "list-services":
-		handleListServices(conn, req)
-	case "list-connections":
-		handleListConnections(conn, req)
 	case "get-log":
 		handleGetLogs(conn, req)
+	case "list-connections":
+		handleListConnections(conn, req)
+	case "list-services":
+		handleListServices(conn, req)
 	case "log-rotate":
 		handleLogRotate(conn, req)
 	case "shutdown":
