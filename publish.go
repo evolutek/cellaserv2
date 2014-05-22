@@ -15,6 +15,9 @@ func handlePublish(conn net.Conn, msgLen uint32, msgBytes []byte, pub *cellaserv
 func doPublish(msgLen uint32, msgBytes []byte, pub *cellaserv.Publish) {
 	event := *pub.Event
 
+	// Logging
+	log.Debug("[Publish] Publishing %s", event)
+
 	// Handle log publishes
 	if strings.HasPrefix(event, "log.") {
 		cellaservLog(pub)
