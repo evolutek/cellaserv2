@@ -30,9 +30,9 @@ var subscriberMap map[string][]net.Conn
 var subscriberMatchMap map[string][]net.Conn
 
 // Internal log names
-var logNewConnection = "log.new-connection"
-var logCloseConnection = "log.close-connection"
-var logLostService = "log.lost-service"
+var logNewConnection = "log.cellaserv.new-connection"
+var logCloseConnection = "log.cellaserv.close-connection"
+var logLostService = "log.cellaserv.lost-service"
 
 // Manage incoming connexions
 func handle(conn net.Conn) {

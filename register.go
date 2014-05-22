@@ -7,7 +7,7 @@ import (
 	"net"
 )
 
-var logNewService = "log.new-service"
+var logNewService = "log.cellaserv.new-service"
 
 // Add service to service map
 func handleRegister(conn net.Conn, msg *cellaserv.Register) {
