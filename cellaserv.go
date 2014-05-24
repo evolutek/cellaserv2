@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 )
 
+var cellaserVersion = "git"
+
 func handleListServices(conn net.Conn, req *cellaserv.Request) {
 	var servicesList []*ServiceJSON
 	for _, names := range services {
@@ -98,6 +100,17 @@ func handleShutdown() {
 	os.Exit(0)
 }
 
+// handleVersion return the version of cellaserv
+func handleVersion(conn net.Conn, req *cellaserv.Request) {
+	data, err := json.Marshal(cellaserVersion)
+	if err != nil {
+		log.Warning("[Cellaserv] Could not marshall version, json error: %s", err)
+		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+		return
+	}
+	sendReply(conn, req, data)
+}
+
 func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 	switch *req.Method {
 	case "get-log":
@@ -110,6 +123,8 @@ func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 		handleLogRotate(conn, req)
 	case "shutdown":
 		handleShutdown()
+	case "version":
+		handleVersion(conn, req)
 	default:
 		sendReplyError(conn, req, cellaserv.Reply_Error_NoSuchMethod)
 	}

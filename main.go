@@ -9,9 +9,11 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"os"
 )
 
 // Command line flags
+var versionFlag = flag.Bool("version", false, "output version information and exit")
 var sockPortFlag = flag.String("port", "", "listening port")
 var sockAddrListen = ":4200"
 
@@ -195,6 +197,15 @@ func serve() {
 	}
 }
 
+func version() {
+	fmt.Println("cellaserv2 version", cellaserVersion)
+	fmt.Println("Source: http://code.evolutek.org/cellaserv2")
+	fmt.Println("Authors: ")
+	fmt.Println("- Rémi Audebert")
+
+	os.Exit(0)
+}
+
 func setup() {
 	// Initialize our maps
 	services = make(map[string]map[string]*Service)
@@ -206,6 +217,10 @@ func setup() {
 
 	// Parse command line arguments
 	flag.Parse()
+
+	if *versionFlag {
+		version()
+	}
 
 	// Setup cellaserv log
 	logPreSetup()
