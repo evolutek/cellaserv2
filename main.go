@@ -48,12 +48,12 @@ func handle(conn net.Conn) {
 	// Handle all messages received on this connection
 	for {
 		closed, err := handleMessage(conn)
+		if err != nil {
+			log.Error("[Message] %s", err)
+		}
 		if closed {
 			log.Info("[Net] Connection closed: %s", remoteAddr)
 			break
-		}
-		if err != nil {
-			log.Error("[Message] %s", err)
 		}
 	}
 
