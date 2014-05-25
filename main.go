@@ -197,6 +197,7 @@ func serve() {
 	}
 }
 
+// Output version information and exit
 func version() {
 	fmt.Println("cellaserv2 version", cellaserVersion)
 	fmt.Println("Source: http://code.evolutek.org/cellaserv2")
@@ -222,7 +223,7 @@ func setup() {
 		version()
 	}
 
-	// Setup cellaserv log
+	// Setup basic logging facilities
 	logPreSetup()
 
 	settingsSetup()
@@ -230,6 +231,7 @@ func setup() {
 	// Enable CPU profiling, stopped when cellaserv receive the kill request
 	setupProfiling()
 
+	// Setup cellaserv logging functions
 	logSetup()
 
 	// Setup pcap dumping of all packets
