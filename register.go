@@ -46,7 +46,6 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 		}
 
 		pub, _ := json.Marshal(service.JSONStruct())
-		cellaservPublish(logNewService, pub)
 		logNewServiceSpecific := fmt.Sprintf("%s.%s", logNewService, name)
 		cellaservPublish(logNewServiceSpecific, pub)
 	}
