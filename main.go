@@ -108,6 +108,10 @@ func handleMessage(conn net.Conn) (bool, error) {
 		return true, fmt.Errorf("Could not read message length: %s", err)
 	}
 
+	if msgLen > 8*1024*1024 {
+		return false, fmt.Errorf("Request too big: %d", msgLen)
+	}
+
 	msgBytes := make([]byte, msgLen)
 	_, err = conn.Read(msgBytes)
 	if err != nil {
