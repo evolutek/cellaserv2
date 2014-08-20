@@ -32,6 +32,11 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 				// Remove from slice
 				sc[i] = sc[len(sc)-1]
 				servicesConn[s.Conn] = sc[:len(sc)-1]
+
+				// Clear key from map if list is empty
+				if len(servicesConn[s.Conn]) == 0 {
+					delete(servicesConn, s.Conn)
+				}
 			}
 		}
 	} else {
