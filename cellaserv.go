@@ -43,6 +43,30 @@ func handleListConnections(conn net.Conn, req *cellaserv.Request) {
 	sendReply(conn, req, data)
 }
 
+// handleListEvents replies with the list of subscribers
+func handleListEvents(conn net.Conn, req *cellaserv.Request) {
+	events := make(map[string][]string)
+
+	fillMap := func(subMap map[string][]net.Conn) {
+		for event, conns := range subMap {
+			var connSlice []string
+			for _, connItem := range conns {
+				connSlice = append(connSlice, connDescribe(connItem))
+			}
+			events[event] = connSlice
+		}
+	}
+
+	fillMap(subscriberMap)
+	fillMap(subscriberMatchMap)
+
+	data, err := json.Marshal(events)
+	if err != nil {
+		log.Error("[Cellaserv] Could not marshal the event list")
+	}
+	sendReply(conn, req, data)
+}
+
 // handleGetLogs reply with the logs
 func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 	if req.Data == nil {
@@ -117,6 +141,8 @@ func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 		handleGetLogs(conn, req)
 	case "list-connections", "list_connections":
 		handleListConnections(conn, req)
+	case "list-events", "list_events":
+		handleListEvents(conn, req)
 	case "list-services", "list_services":
 		handleListServices(conn, req)
 	case "log-rotate", "log_rotate":
