@@ -3,7 +3,6 @@ package main
 import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
 	"encoding/json"
-	"fmt"
 	"net"
 )
 
@@ -44,15 +43,17 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 					"there is already a service without an identification")
 			}
 		}
-
-		pub, _ := json.Marshal(service.JSONStruct())
-		logNewServiceSpecific := fmt.Sprintf("%s.%s", logNewService, name)
-		cellaservPublish(logNewServiceSpecific, pub)
 	}
+
+	// This makes all requests go to the new service
 	services[name][ident] = service
 
 	// Keep track of origin connection in order to remove when the connection is closed
 	servicesConn[conn] = append(servicesConn[conn], service)
+
+	// Publish new service data
+	pub_json, _ := json.Marshal(service.JSONStruct())
+	cellaservPublish(logNewService, pub_json)
 }
 
 // vim: set nowrap tw=100 noet sw=8:

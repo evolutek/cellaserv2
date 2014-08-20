@@ -65,8 +65,8 @@ func handle(conn net.Conn) {
 	// TODO: notify goroutines waiting for acks for this service
 	for _, s := range servicesConn[conn] {
 		log.Info("[Services] Remove %s", s)
-		pub, _ := json.Marshal(s.JSONStruct())
-		cellaservPublish(logLostService, pub)
+		pub_json, _ := json.Marshal(s.JSONStruct())
+		cellaservPublish(logLostService, pub_json)
 		delete(services[s.Name], s.Identification)
 	}
 	delete(servicesConn, conn)
