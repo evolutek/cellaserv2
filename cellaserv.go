@@ -113,13 +113,13 @@ func handleVersion(conn net.Conn, req *cellaserv.Request) {
 
 func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 	switch *req.Method {
-	case "get-log":
+	case "get-log", "get_log":
 		handleGetLogs(conn, req)
-	case "list-connections":
+	case "list-connections", "list_connections":
 		handleListConnections(conn, req)
-	case "list-services":
+	case "list-services", "list_services":
 		handleListServices(conn, req)
-	case "log-rotate":
+	case "log-rotate", "log_rotate":
 		handleLogRotate(conn, req)
 	case "shutdown":
 		handleShutdown()
