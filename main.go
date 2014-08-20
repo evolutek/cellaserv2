@@ -41,7 +41,7 @@ var logLostSubscriber = "log.cellaserv.lost-subscriber"
 func handle(conn net.Conn) {
 	remoteAddr := conn.RemoteAddr()
 	log.Info("[Net] Connection opened: %s", remoteAddr)
-	cellaservPublish(logNewConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
+	cellaservPublish(logNewConnection, []byte(fmt.Sprintf("{\"Addr\": \"%s\"}", remoteAddr)))
 
 	// Append to list of handled connections
 	connListElt := connList.PushBack(conn)
@@ -95,7 +95,7 @@ func handle(conn net.Conn) {
 	removeConnFromMap(subscriberMap)
 	removeConnFromMap(subscriberMatchMap)
 
-	cellaservPublish(logCloseConnection, []byte(fmt.Sprintf("\"%s\"", remoteAddr)))
+	cellaservPublish(logCloseConnection, []byte(fmt.Sprintf("{\"Addr\": \"%s\"}", remoteAddr)))
 }
 
 func logUnmarshalError(msg []byte) {
