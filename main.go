@@ -35,6 +35,7 @@ var subscriberMatchMap map[string][]net.Conn
 var logNewConnection = "log.cellaserv.new-connection"
 var logCloseConnection = "log.cellaserv.close-connection"
 var logLostService = "log.cellaserv.lost-service"
+var logLostSubscriber = "log.cellaserv.lost-subscriber"
 
 // Manage incoming connexions
 func handle(conn net.Conn) {
@@ -78,7 +79,12 @@ func handle(conn net.Conn) {
 					// Remove from list of subscribers
 					subs[i] = subs[len(subs)-1]
 					subMap[key] = subs[:len(subs)-1]
-					if len(subs) == 0 {
+
+					pub_json, _ := json.Marshal(LogSubscriberJSON{key,
+						connDescribe(conn)})
+					cellaservPublish(logLostSubscriber, pub_json)
+
+					if len(subMap[key]) == 0 {
 						delete(subMap, key)
 						break
 					}
