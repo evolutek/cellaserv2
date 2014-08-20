@@ -22,6 +22,10 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 	// Check for duplicate services
 	if s, ok := services[name][ident]; ok {
 		log.Warning("[Services] Replace %s", s)
+
+		pub_json, _ := json.Marshal(s.JSONStruct())
+		cellaservPublish(logLostService, pub_json)
+
 		sc := servicesConn[s.Conn]
 		for i, ss := range sc {
 			if ss.Name == name && ss.Identification == ident {
