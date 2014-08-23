@@ -12,7 +12,8 @@ import (
 	"path/filepath"
 )
 
-var cellaserVersion = "git"
+// This string will be replaced by the build system
+var csVersion = "git"
 
 func handleListServices(conn net.Conn, req *cellaserv.Request) {
 	// Fix static empty slice that is "null" in JSON
@@ -128,7 +129,7 @@ func handleShutdown() {
 
 // handleVersion return the version of cellaserv
 func handleVersion(conn net.Conn, req *cellaserv.Request) {
-	data, err := json.Marshal(cellaserVersion)
+	data, err := json.Marshal(csVersion)
 	if err != nil {
 		log.Warning("[Cellaserv] Could not marshall version, json error: %s", err)
 		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)

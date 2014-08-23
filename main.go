@@ -209,7 +209,7 @@ func serve() {
 
 // Output version information and exit
 func version() {
-	fmt.Println("cellaserv2 version", cellaserVersion)
+	fmt.Println("cellaserv2 version", csVersion)
 	fmt.Println("Source: http://code.evolutek.org/cellaserv2")
 	fmt.Println("Authors: ")
 	fmt.Println("- Rémi Audebert")
