@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 // This string will be replaced by the build system
@@ -70,7 +71,23 @@ func handleListEvents(conn net.Conn, req *cellaserv.Request) {
 	sendReply(conn, req, data)
 }
 
-// handleGetLogs reply with the logs
+/*
+handleGetLogs reply with the content of log files.
+
+Request format:
+
+	bytes
+
+Examples:
+
+	cellaserv.new-connection
+	cellaserv.*
+
+Reply format:
+
+	bytes
+
+*/
 func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 	if req.Data == nil {
 		log.Warning("[Cellaserv] Log request does not specify event")
@@ -80,10 +97,24 @@ func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 
 	event := string(req.Data)
 	pattern := path.Join(*logRootDirectory, logSubDir, event+".log")
+
+	if !strings.HasPrefix(pattern, path.Join(*logRootDirectory, logSubDir)) {
+		log.Warning("[Cellaserv] Don't try to do directory traversal")
+		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+		return
+	}
+
+	// Globbing is allowed
 	filenames, err := filepath.Glob(pattern)
 
-	if err != nil || len(filenames) == 0 {
-		log.Warning("[Cellaserv] Log request specified erroneous log: ", err)
+	if err != nil {
+		log.Warning("[Cellaserv] Invalid log globbing : %s, %s", event, err)
+		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+		return
+	}
+
+	if len(filenames) == 0 {
+		log.Warning("[Cellaserv] No such logs: %s", event)
 		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
 		return
 	}
@@ -93,8 +124,9 @@ func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 	for _, filename := range filenames {
 		data, err := ioutil.ReadFile(filename)
 		if err != nil {
-			log.Warning("[Cellaserv] Could not open log:", filename)
+			log.Warning("[Cellaserv] Could not open log: %s", filename)
 			sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+			return
 		}
 		data_buf.Write(data)
 	}
@@ -140,7 +172,7 @@ func handleVersion(conn net.Conn, req *cellaserv.Request) {
 
 func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 	switch *req.Method {
-	case "get-log", "get_log":
+	case "get-logs", "get_logs":
 		handleGetLogs(conn, req)
 	case "list-connections", "list_connections":
 		handleListConnections(conn, req)
