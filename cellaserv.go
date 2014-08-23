@@ -15,7 +15,9 @@ import (
 var cellaserVersion = "git"
 
 func handleListServices(conn net.Conn, req *cellaserv.Request) {
-	var servicesList []*ServiceJSON
+	// Fix static empty slice that is "null" in JSON
+	// A dynamic empty slice is []
+	servicesList := make([]*ServiceJSON, 0)
 	for _, names := range services {
 		for _, s := range names {
 			servicesList = append(servicesList, s.JSONStruct())
