@@ -61,6 +61,9 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 	// Publish new service data
 	pub_json, _ := json.Marshal(service.JSONStruct())
 	cellaservPublish(logNewService, pub_json)
+
+	pub_json, _ = json.Marshal(connNameJSON{conn.RemoteAddr().String(), connDescribe(conn)})
+	cellaservPublish(logConnRename, pub_json)
 }
 
 // vim: set nowrap tw=100 noet sw=8:

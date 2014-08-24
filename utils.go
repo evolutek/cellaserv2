@@ -5,7 +5,6 @@ import (
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"net"
 	"strings"
 )
@@ -24,7 +23,7 @@ func connToJson(conn net.Conn) []byte {
 // connDesribe returns all the information cellaserv have on the connection
 func connDescribe(conn net.Conn) string {
 	if name, ok := connNameMap[conn]; ok {
-		return fmt.Sprintf("{%s at %s}", name, conn.RemoteAddr())
+		return name
 	}
 
 	services, ok := servicesConn[conn]
@@ -35,7 +34,7 @@ func connDescribe(conn net.Conn) string {
 
 	var servcs []string
 	for _, srvc := range services {
-		servcs = append(servcs, srvc.String())
+		servcs = append(servcs, srvc.Name)
 	}
 	return strings.Join(servcs, ", ")
 }
