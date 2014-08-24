@@ -4,26 +4,40 @@ import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
 	"net"
 	"strings"
 )
 
 // Log utils
 
+type connJson struct {
+	Addr string
+}
+
+func connToJson(conn net.Conn) []byte {
+	ret, _ := json.Marshal(connJson{conn.RemoteAddr().String()})
+	return ret
+}
+
 // connDesribe returns all the information cellaserv have on the connection
-func connDescribe(conn net.Conn) (ret string) {
+func connDescribe(conn net.Conn) string {
+	if name, ok := connNameMap[conn]; ok {
+		return fmt.Sprintf("{%s at %s}", name, conn.RemoteAddr())
+	}
+
 	services, ok := servicesConn[conn]
 	if !ok {
 		// This connection is not associated with a service
-		ret = conn.RemoteAddr().String()
-	} else {
-		var servcs []string
-		for _, srvc := range services {
-			servcs = append(servcs, srvc.String())
-		}
-		ret = strings.Join(servcs, ", ")
+		return conn.RemoteAddr().String()
 	}
-	return
+
+	var servcs []string
+	for _, srvc := range services {
+		servcs = append(servcs, srvc.String())
+	}
+	return strings.Join(servcs, ", ")
 }
 
 // Send utils

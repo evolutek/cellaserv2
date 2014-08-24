@@ -7,11 +7,9 @@ import (
 	"strings"
 )
 
-var logNewSubscriber = "log.cellaserv.new-subscriber"
-
 type LogSubscriberJSON struct {
-	Event      string
-	Subscriber string
+	Event   string
+	SubAddr string
 }
 
 func handleSubscribe(conn net.Conn, sub *cellaserv.Subscribe) {
@@ -22,7 +20,7 @@ func handleSubscribe(conn net.Conn, sub *cellaserv.Subscribe) {
 		subscriberMap[*sub.Event] = append(subscriberMap[*sub.Event], conn)
 	}
 
-	pub_json, _ := json.Marshal(LogSubscriberJSON{*sub.Event, connDescribe(conn)})
+	pub_json, _ := json.Marshal(LogSubscriberJSON{*sub.Event, conn.RemoteAddr().String()})
 	cellaservPublish(logNewSubscriber, pub_json)
 }
 

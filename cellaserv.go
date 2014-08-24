@@ -16,6 +16,48 @@ import (
 // This string will be replaced by the build system
 var csVersion = "git"
 
+// Logs sent by cellaserv
+var logCloseConnection = "log.cellaserv.close-connection"
+var logConnRename = "log.cellaserv.connection-rename"
+var logLostService = "log.cellaserv.lost-service"
+var logLostSubscriber = "log.cellaserv.lost-subscriber"
+var logNewConnection = "log.cellaserv.new-connection"
+var logNewService = "log.cellaserv.new-service"
+var logNewSubscriber = "log.cellaserv.new-subscriber"
+
+type connDescribeRequest struct {
+	Name string
+}
+
+type connNameJSON struct {
+	Addr string
+	Name string
+}
+
+/*
+handleDescribeConn attaches a name to the connection that sent the request.
+
+This information is normaly given when a service registers, but it can also be useful for other
+clients.
+*/
+func handleDescribeConn(conn net.Conn, req *cellaserv.Request) {
+	var data connDescribeRequest
+
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		log.Warning("[Cellaserv] Could not unmarshal describe-conn: %s, %s", req.Data, err)
+		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+		return
+	}
+
+	connNameMap[conn] = data.Name
+	newName := connDescribe(conn)
+
+	pub_json, _ := json.Marshal(connNameJSON{conn.RemoteAddr().String(), newName})
+	cellaservPublish(logConnRename, pub_json)
+
+	sendReply(conn, req, nil) // Empty reply
+}
+
 func handleListServices(conn net.Conn, req *cellaserv.Request) {
 	// Fix static empty slice that is "null" in JSON
 	// A dynamic empty slice is []
@@ -35,10 +77,11 @@ func handleListServices(conn net.Conn, req *cellaserv.Request) {
 
 // handleListConnections replies with the list of currently connected clients
 func handleListConnections(conn net.Conn, req *cellaserv.Request) {
-	var conns []string
+	var conns []connNameJSON
 	for c := connList.Front(); c != nil; c = c.Next() {
-		// Return raw ip:port
-		conns = append(conns, c.Value.(net.Conn).RemoteAddr().String())
+		connElt := c.Value.(net.Conn)
+		conns = append(conns,
+			connNameJSON{connElt.RemoteAddr().String(), connDescribe(connElt)})
 	}
 	data, err := json.Marshal(conns)
 	if err != nil {
@@ -55,7 +98,7 @@ func handleListEvents(conn net.Conn, req *cellaserv.Request) {
 		for event, conns := range subMap {
 			var connSlice []string
 			for _, connItem := range conns {
-				connSlice = append(connSlice, connDescribe(connItem))
+				connSlice = append(connSlice, connItem.RemoteAddr().String())
 			}
 			events[event] = connSlice
 		}
@@ -172,6 +215,8 @@ func handleVersion(conn net.Conn, req *cellaserv.Request) {
 
 func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 	switch *req.Method {
+	case "describe-conn", "describe_conn":
+		handleDescribeConn(conn, req)
 	case "get-logs", "get_logs":
 		handleGetLogs(conn, req)
 	case "list-connections", "list_connections":

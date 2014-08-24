@@ -20,6 +20,9 @@ var sockAddrListen = ":4200"
 // List of all currently handled connections
 var connList *list.List
 
+// Map a connection to a name, filled with cellaserv.descrbie-conn
+var connNameMap map[net.Conn]string
+
 // Map of currently connected services by name, then identification
 var services map[string]map[string]*Service
 
@@ -31,17 +34,12 @@ var reqIds map[uint64]*RequestTimer
 var subscriberMap map[string][]net.Conn
 var subscriberMatchMap map[string][]net.Conn
 
-// Internal log names
-var logNewConnection = "log.cellaserv.new-connection"
-var logCloseConnection = "log.cellaserv.close-connection"
-var logLostService = "log.cellaserv.lost-service"
-var logLostSubscriber = "log.cellaserv.lost-subscriber"
-
 // Manage incoming connexions
 func handle(conn net.Conn) {
-	remoteAddr := conn.RemoteAddr()
-	log.Info("[Net] Connection opened: %s", remoteAddr)
-	cellaservPublish(logNewConnection, []byte(fmt.Sprintf("{\"Addr\": \"%s\"}", remoteAddr)))
+	log.Info("[Net] Connection opened: %s", connDescribe(conn))
+
+	connJson := connToJson(conn)
+	cellaservPublish(logNewConnection, connJson)
 
 	// Append to list of handled connections
 	connListElt := connList.PushBack(conn)
@@ -53,13 +51,16 @@ func handle(conn net.Conn) {
 			log.Error("[Message] %s", err)
 		}
 		if closed {
-			log.Info("[Net] Connection closed: %s", remoteAddr)
+			log.Info("[Net] Connection closed: %s", connDescribe(conn))
 			break
 		}
 	}
 
 	// Remove from list of handled connection
 	connList.Remove(connListElt)
+
+	// Clean connection name, if not given this is a noop
+	delete(connNameMap, conn)
 
 	// Remove services registered by this connection
 	// TODO: notify goroutines waiting for acks for this service
@@ -80,8 +81,8 @@ func handle(conn net.Conn) {
 					subs[i] = subs[len(subs)-1]
 					subMap[key] = subs[:len(subs)-1]
 
-					pub_json, _ := json.Marshal(LogSubscriberJSON{key,
-						connDescribe(conn)})
+					pub_json, _ := json.Marshal(
+						LogSubscriberJSON{key, connDescribe(conn)})
 					cellaservPublish(logLostSubscriber, pub_json)
 
 					if len(subMap[key]) == 0 {
@@ -95,7 +96,7 @@ func handle(conn net.Conn) {
 	removeConnFromMap(subscriberMap)
 	removeConnFromMap(subscriberMatchMap)
 
-	cellaservPublish(logCloseConnection, []byte(fmt.Sprintf("{\"Addr\": \"%s\"}", remoteAddr)))
+	cellaservPublish(logCloseConnection, connJson)
 }
 
 func logUnmarshalError(msg []byte) {
@@ -219,6 +220,7 @@ func version() {
 
 func setup() {
 	// Initialize our maps
+	connNameMap = make(map[net.Conn]string)
 	services = make(map[string]map[string]*Service)
 	servicesConn = make(map[net.Conn][]*Service)
 	reqIds = make(map[uint64]*RequestTimer)

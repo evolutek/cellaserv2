@@ -45,6 +45,7 @@ func (s *Service) JSONStruct() *ServiceJSON {
 }
 
 func (s *Service) sendMessage(msg []byte) {
+	// Clear temporary buffer
 	s.buf.Reset()
 	// Write the size of the message
 	binary.Write(&s.buf, binary.BigEndian, uint32(len(msg)))
