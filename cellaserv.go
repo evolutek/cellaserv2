@@ -205,6 +205,37 @@ func handleShutdown() {
 	os.Exit(0)
 }
 
+// handleSpy register the connection as a spy of a service
+func handleSpy(conn net.Conn, req *cellaserv.Request) {
+	var data struct {
+		Service        string
+		Identification string
+	}
+
+	err := json.Unmarshal(req.Data, &data)
+	if err != nil {
+		log.Warning("[Cellaserv] Could not spy, json error: %s", err)
+		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+		return
+	}
+
+	srvc, ok := services[data.Service][data.Identification]
+	if !ok {
+		log.Warning("[Cellaserv] Could not spy, no such service: %s/%s", data.Service,
+			data.Identification)
+		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+		return
+	}
+
+	log.Debug("[Cellaserv] %s spies on %s/%s", connDescribe(conn), data.Service,
+		data.Identification)
+
+	srvc.Spies = append(srvc.Spies, conn)
+	connSpies[conn] = append(connSpies[conn], srvc)
+
+	sendReply(conn, req, nil)
+}
+
 // handleVersion return the version of cellaserv
 func handleVersion(conn net.Conn, req *cellaserv.Request) {
 	data, err := json.Marshal(csVersion)
@@ -232,6 +263,8 @@ func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 		handleLogRotate(conn, req)
 	case "shutdown":
 		handleShutdown()
+	case "spy":
+		handleSpy(conn, req)
 	case "version":
 		handleVersion(conn, req)
 	default:

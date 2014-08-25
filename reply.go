@@ -9,15 +9,20 @@ func handleReply(conn net.Conn, msgRaw []byte, rep *cellaserv.Reply) {
 	id := *rep.Id
 	log.Info("[Reply] %s replies to %d", conn.RemoteAddr(), id)
 
-	reqTimer, ok := reqIds[id]
+	reqTrack, ok := reqIds[id]
 	if !ok {
 		log.Error("[Reply] Unknown ID: %d", id)
 		return
 	}
 	delete(reqIds, id)
 
-	reqTimer.timer.Stop()
-	log.Debug("[Reply] Forwarding to %s", reqTimer.sender.RemoteAddr())
+	// Forward reply to spies
+	for _, spy := range reqTrack.spies {
+		sendRawMessage(spy, msgRaw)
+	}
+
+	reqTrack.timer.Stop()
+	log.Debug("[Reply] Forwarding to %s", reqTrack.sender.RemoteAddr())
 	sendRawMessage(reqTrack.sender, msgRaw)
 }
 

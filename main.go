@@ -23,6 +23,9 @@ var connList *list.List
 // Map a connection to a name, filled with cellaserv.descrbie-conn
 var connNameMap map[net.Conn]string
 
+// Map a connection to the service it spies
+var connSpies map[net.Conn][]*Service
+
 // Map of currently connected services by name, then identification
 var services map[string]map[string]*Service
 
@@ -30,7 +33,7 @@ var services map[string]map[string]*Service
 var servicesConn map[net.Conn][]*Service
 
 // Map of requests ids with associated timeout timer
-var reqIds map[uint64]*RequestTimer
+var reqIds map[uint64]*RequestTracking
 var subscriberMap map[string][]net.Conn
 var subscriberMatchMap map[string][]net.Conn
 
@@ -95,6 +98,19 @@ func handle(conn net.Conn) {
 	}
 	removeConnFromMap(subscriberMap)
 	removeConnFromMap(subscriberMatchMap)
+
+	// Remove spy info
+	for _, srvc := range connSpies[conn] {
+		for i, connItem := range srvc.Spies {
+			if connItem == conn {
+				// Remove from slice
+				srvc.Spies[i] = srvc.Spies[len(srvc.Spies)-1]
+				srvc.Spies = srvc.Spies[:len(srvc.Spies)-1]
+				break
+			}
+		}
+	}
+	delete(connSpies, conn)
 
 	cellaservPublish(logCloseConnection, connJson)
 }
@@ -221,9 +237,10 @@ func version() {
 func setup() {
 	// Initialize our maps
 	connNameMap = make(map[net.Conn]string)
+	connSpies = make(map[net.Conn][]*Service)
 	services = make(map[string]map[string]*Service)
 	servicesConn = make(map[net.Conn][]*Service)
-	reqIds = make(map[uint64]*RequestTimer)
+	reqIds = make(map[uint64]*RequestTracking)
 	subscriberMap = make(map[string][]net.Conn)
 	subscriberMatchMap = make(map[string][]net.Conn)
 	connList = list.New()

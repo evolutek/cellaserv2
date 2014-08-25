@@ -6,9 +6,10 @@ import (
 	"time"
 )
 
-type RequestTimer struct {
+type RequestTracking struct {
 	sender net.Conn
 	timer  *time.Timer
+	spies  []net.Conn
 }
 
 func handleRequest(conn net.Conn, msgRaw []byte, req *cellaserv.Request) {
@@ -68,10 +69,14 @@ func handleRequest(conn net.Conn, msgRaw []byte, req *cellaserv.Request) {
 	timer := time.AfterFunc(5*time.Second, handleTimeout)
 
 	// The ID is used to track the sender of the request
-	reqIds[*id] = &RequestTimer{conn, timer}
+	reqIds[*id] = &RequestTracking{conn, timer, srvc.Spies}
 
-	log.Debug("[Request] Forwarding to %s", srvc)
 	srvc.sendMessage(msgRaw)
+
+	// Forward message to the spies of this service
+	for _, spy := range srvc.Spies {
+		sendRawMessage(spy, msgRaw)
+	}
 }
 
 // vim: set nowrap tw=100 noet sw=8:

@@ -6,8 +6,7 @@ type Service struct {
 	Conn           net.Conn
 	Name           string
 	Identification string
-	// Internal buffer used to craft messages
-	buf bytes.Buffer
+	Spies          []net.Conn
 }
 
 type ServiceJSON struct {
