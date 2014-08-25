@@ -25,10 +25,7 @@ var logNewConnection = "log.cellaserv.new-connection"
 var logNewService = "log.cellaserv.new-service"
 var logNewSubscriber = "log.cellaserv.new-subscriber"
 
-type connDescribeRequest struct {
-	Name string
-}
-
+// Send conn data as this struct
 type connNameJSON struct {
 	Addr string
 	Name string
@@ -41,7 +38,9 @@ This information is normaly given when a service registers, but it can also be u
 clients.
 */
 func handleDescribeConn(conn net.Conn, req *cellaserv.Request) {
-	var data connDescribeRequest
+	var data struct {
+		Name string
+	}
 
 	if err := json.Unmarshal(req.Data, &data); err != nil {
 		log.Warning("[Cellaserv] Could not unmarshal describe-conn: %s, %s", req.Data, err)
@@ -85,6 +84,7 @@ func handleListConnections(conn net.Conn, req *cellaserv.Request) {
 		conns = append(conns,
 			connNameJSON{connElt.RemoteAddr().String(), connDescribe(connElt)})
 	}
+
 	data, err := json.Marshal(conns)
 	if err != nil {
 		log.Error("[Cellaserv] Could not marshal the connections list")
@@ -179,14 +179,14 @@ func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 }
 
 func handleLogRotate(conn net.Conn, req *cellaserv.Request) {
-	type logRotateFormat struct {
-		Where string
-	}
 	// Default to time
 	if req.Data == nil {
 		logRotateTimeNow()
 	} else {
-		var data logRotateFormat
+		var data struct {
+			Where string
+		}
+
 		err := json.Unmarshal(req.Data, &data)
 		if err != nil {
 			log.Warning("[Cellaserv] Could not rotate log, json error: %s", err)
@@ -195,6 +195,7 @@ func handleLogRotate(conn net.Conn, req *cellaserv.Request) {
 		}
 		logRotateName(data.Where)
 	}
+
 	sendReply(conn, req, nil)
 }
 
