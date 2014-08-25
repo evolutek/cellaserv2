@@ -55,6 +55,8 @@ func handleDescribeConn(conn net.Conn, req *cellaserv.Request) {
 	pub_json, _ := json.Marshal(connNameJSON{conn.RemoteAddr().String(), newName})
 	cellaservPublish(logConnRename, pub_json)
 
+	log.Debug("[Cellaserv] Describe %s as %s", conn.RemoteAddr(), data.Name)
+
 	sendReply(conn, req, nil) // Empty reply
 }
 
