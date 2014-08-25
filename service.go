@@ -20,14 +20,6 @@ func newService(conn net.Conn, name string, ident string) *Service {
 	return s
 }
 
-// func (s *Service) String() string {
-// 	if s.Identification != "" {
-// 		return fmt.Sprintf("{Service %s/%s at %s}", s.Name, s.Identification, s.Conn.RemoteAddr())
-// 	} else {
-// 		return fmt.Sprintf("{Service %s at %s}", s.Name, s.Conn.RemoteAddr())
-// 	}
-// }
-
 // JSONStruct creates a struc good for JSON encoding.
 func (s *Service) JSONStruct() *ServiceJSON {
 	return &ServiceJSON{

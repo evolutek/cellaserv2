@@ -11,7 +11,7 @@ func handleRegister(conn net.Conn, msg *cellaserv.Register) {
 	name := msg.GetName()
 	ident := msg.GetIdentification()
 	service := newService(conn, name, ident)
-	log.Info("[Services] New %s", service)
+	log.Info("[Services] New %s/%s", name, ident)
 
 	if _, ok := services[name]; !ok {
 		services[name] = make(map[string]*Service)
