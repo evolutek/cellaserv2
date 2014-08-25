@@ -267,7 +267,7 @@ func cellaservPublish(event string, data []byte) {
 		return
 	}
 
-	doPublish(uint32(len(msgBytes)), msgBytes, pub)
+	doPublish(msgBytes, pub)
 }
 
 // vim: set nowrap tw=100 noet sw=8:

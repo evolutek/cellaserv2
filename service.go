@@ -1,10 +1,6 @@
 package main
 
-import (
-	"bytes"
-	"encoding/binary"
-	"net"
-)
+import "net"
 
 type Service struct {
 	Conn           net.Conn
@@ -21,8 +17,7 @@ type ServiceJSON struct {
 }
 
 func newService(conn net.Conn, name string, ident string) *Service {
-	var buf bytes.Buffer
-	s := &Service{conn, name, ident, buf}
+	s := &Service{conn, name, ident, nil}
 	return s
 }
 
@@ -44,14 +39,7 @@ func (s *Service) JSONStruct() *ServiceJSON {
 }
 
 func (s *Service) sendMessage(msg []byte) {
-	// Clear temporary buffer
-	s.buf.Reset()
-	// Write the size of the message
-	binary.Write(&s.buf, binary.BigEndian, uint32(len(msg)))
-	// Concatenate with message content
-	s.buf.Write(msg)
-	// Send the whole message at once
-	s.Conn.Write(s.buf.Bytes())
+	sendRawMessage(s.Conn, msg)
 }
 
 // vim: set nowrap tw=100 noet sw=8:

@@ -161,7 +161,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 			logUnmarshalError(msg.Content)
 			return false, fmt.Errorf("Could not unmarshal reply: %s", err)
 		}
-		handleReply(conn, msgLen, msgBytes, reply)
+		handleReply(conn, msgBytes, reply)
 		return false, nil
 	case cellaserv.Message_Subscribe:
 		sub := &cellaserv.Subscribe{}
@@ -179,7 +179,7 @@ func handleMessage(conn net.Conn) (bool, error) {
 			logUnmarshalError(msg.Content)
 			return false, fmt.Errorf("Could not unmarshal publish: %s", err)
 		}
-		handlePublish(conn, msgLen, msgBytes, pub)
+		handlePublish(conn, msgBytes, pub)
 		return false, nil
 	default:
 		return false, fmt.Errorf("Unknown message type: %d", *msg.Type)

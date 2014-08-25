@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-func handlePublish(conn net.Conn, msgLen uint32, msgBytes []byte, pub *cellaserv.Publish) {
+func handlePublish(conn net.Conn, msgBytes []byte, pub *cellaserv.Publish) {
 	log.Info("[Publish] %s publishes %s", connDescribe(conn), *pub.Event)
-	doPublish(msgLen, msgBytes, pub)
+	doPublish(msgBytes, pub)
 }
 
-func doPublish(msgLen uint32, msgBytes []byte, pub *cellaserv.Publish) {
+func doPublish(msgBytes []byte, pub *cellaserv.Publish) {
 	event := *pub.Event
 
 	// Logging
@@ -39,7 +39,7 @@ func doPublish(msgLen uint32, msgBytes []byte, pub *cellaserv.Publish) {
 	for _, connSub := range subs {
 		log.Debug("[Publish] Forwarding publish to %s", connDescribe(connSub))
 		dumpOutgoing(connSub, msgBytes)
-		sendRawMessageLen(connSub, msgLen, msgBytes)
+		sendRawMessage(connSub, msgBytes)
 	}
 }
 

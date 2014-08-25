@@ -2,6 +2,7 @@ package main
 
 import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
+	"bytes"
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
 	"encoding/json"
@@ -77,14 +78,19 @@ func sendMessage(conn net.Conn, msg *cellaserv.Message) {
 	}
 	dumpOutgoing(conn, msgBytes)
 
-	msgLen := uint32(len(msgBytes))
-	sendRawMessageLen(conn, msgLen, msgBytes)
+	sendRawMessage(conn, msgBytes)
 }
 
-func sendRawMessageLen(conn net.Conn, msgLen uint32, msg []byte) {
-	// Any IO error will be detected by the main loop
-	binary.Write(conn, binary.BigEndian, msgLen)
-	conn.Write(msg)
+func sendRawMessage(conn net.Conn, msg []byte) {
+	// Create temporary buffer
+	var buf bytes.Buffer
+	// Write the size of the message...
+	binary.Write(&buf, binary.BigEndian, uint32(len(msg)))
+	// ...concatenate with message content
+	buf.Write(msg)
+	// Send the whole message at once (avoid race condition)
+	// Any IO error will be detected by the main loop trying to read from the conn
+	conn.Write(buf.Bytes())
 }
 
 // vim: set nowrap tw=100 noet sw=8:
