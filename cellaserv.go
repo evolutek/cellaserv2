@@ -24,6 +24,7 @@ var logLostSubscriber = "log.cellaserv.lost-subscriber"
 var logNewConnection = "log.cellaserv.new-connection"
 var logNewService = "log.cellaserv.new-service"
 var logNewSubscriber = "log.cellaserv.new-subscriber"
+var logNewLogSession = "log.cellaserv.new-log-session"
 
 // Send conn data as this struct
 type connNameJSON struct {
@@ -199,6 +200,17 @@ func handleLogRotate(conn net.Conn, req *cellaserv.Request) {
 	sendReply(conn, req, nil)
 }
 
+// handleSession returns the current log sesion
+func handleSession(conn net.Conn, req *cellaserv.Request) {
+	data, err := json.Marshal(logSubDir)
+	if err != nil {
+		log.Warning("[Cellaserv] Could not marshall log session, json error: %s", err)
+		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
+		return
+	}
+	sendReply(conn, req, data)
+}
+
 // handleShutdown quit cellaserv. Used for debug purposes
 func handleShutdown() {
 	stopProfiling()
@@ -261,6 +273,8 @@ func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 		handleListServices(conn, req)
 	case "log-rotate", "log_rotate":
 		handleLogRotate(conn, req)
+	case "session":
+		handleSession(conn, req)
 	case "shutdown":
 		handleShutdown()
 	case "spy":
