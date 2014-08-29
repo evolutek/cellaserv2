@@ -118,7 +118,7 @@ func handleListEvents(conn net.Conn, req *cellaserv.Request) {
 }
 
 /*
-handleGetLogs reply with the content of log files.
+handleGetLogs replies with the content of log files.
 
 Request format:
 
@@ -179,6 +179,7 @@ func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 	sendReply(conn, req, data_buf.Bytes())
 }
 
+// handleLogRotate changes the current log environment
 func handleLogRotate(conn net.Conn, req *cellaserv.Request) {
 	// Default to time
 	if req.Data == nil {
@@ -211,13 +212,13 @@ func handleSession(conn net.Conn, req *cellaserv.Request) {
 	sendReply(conn, req, data)
 }
 
-// handleShutdown quit cellaserv. Used for debug purposes
+// handleShutdown quits cellaserv. Used for debug purposes
 func handleShutdown() {
 	stopProfiling()
 	os.Exit(0)
 }
 
-// handleSpy register the connection as a spy of a service
+// handleSpy registers the connection as a spy of a service
 func handleSpy(conn net.Conn, req *cellaserv.Request) {
 	var data struct {
 		Service        string
@@ -286,16 +287,17 @@ func cellaservRequest(conn net.Conn, req *cellaserv.Request) {
 	}
 }
 
+// cellaservLog logs a publish message to a file
 func cellaservLog(pub *cellaserv.Publish) {
-	if pub.Data == nil {
-		log.Warning("[Log] %s does not have data", *pub.Event)
-		return
+	var data string
+	if pub.Data != nil {
+		data = string(pub.Data)
 	}
-	data := string(pub.Data)
-	event := (*pub.Event)[4:]
+	event := (*pub.Event)[4:] // Strip 'log.'
 	logEvent(event, data)
 }
 
+// cellaservPublish sends a publish message from cellaserv
 func cellaservPublish(event string, data []byte) {
 	pub := &cellaserv.Publish{Event: &event}
 	if data != nil {
