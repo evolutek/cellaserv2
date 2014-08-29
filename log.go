@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"github.com/op/go-logging"
 	golog "log"
@@ -68,6 +69,13 @@ func logRotateName(name string) {
 	}
 	// XXX: close old log files?
 	servicesLogs = make(map[string]*golog.Logger)
+
+	pub_data, err := json.Marshal(logSubDir)
+	if err != nil {
+		log.Error("[Publish] Could not publish new log session, json error: %s: %s",
+			logSubDir, err)
+	}
+	cellaservPublish(logNewLogSession, pub_data)
 }
 
 // logRotateTimeNow switch the current log subdirectory to current time
