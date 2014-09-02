@@ -20,6 +20,8 @@ pkgver() {
 build() {
   cd "$srcdir/$pkgname"
   GOPATH="$srcdir" go get -d -v
+  # Adding version information
+  sed -ir 's/csVersion = .*/csVersion = "'$pkgver'"/' cellaserv.go
   GOPATH="$srcdir" go build -v
 }
 
