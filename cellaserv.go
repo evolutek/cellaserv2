@@ -13,18 +13,20 @@ import (
 	"strings"
 )
 
-// This string will be replaced by the build system
-var csVersion = "git"
+const (
+	// This string will be replaced by the build system
+	csVersion = "git"
 
-// Logs sent by cellaserv
-var logCloseConnection = "log.cellaserv.close-connection"
-var logConnRename = "log.cellaserv.connection-rename"
-var logLostService = "log.cellaserv.lost-service"
-var logLostSubscriber = "log.cellaserv.lost-subscriber"
-var logNewConnection = "log.cellaserv.new-connection"
-var logNewService = "log.cellaserv.new-service"
-var logNewSubscriber = "log.cellaserv.new-subscriber"
-var logNewLogSession = "log.cellaserv.new-log-session"
+	// Logs sent by cellaserv
+	logCloseConnection = "log.cellaserv.close-connection"
+	logConnRename      = "log.cellaserv.connection-rename"
+	logLostService     = "log.cellaserv.lost-service"
+	logLostSubscriber  = "log.cellaserv.lost-subscriber"
+	logNewConnection   = "log.cellaserv.new-connection"
+	logNewService      = "log.cellaserv.new-service"
+	logNewSubscriber   = "log.cellaserv.new-subscriber"
+	logNewLogSession   = "log.cellaserv.new-log-session"
+)
 
 // Send conn data as this struct
 type connNameJSON struct {

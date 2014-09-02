@@ -12,30 +12,32 @@ import (
 	"os"
 )
 
-// Command line flags
-var versionFlag = flag.Bool("version", false, "output version information and exit")
-var sockPortFlag = flag.String("port", "", "listening port")
-var sockAddrListen = ":4200"
+var (
+	// Command line flags
+	versionFlag    = flag.Bool("version", false, "output version information and exit")
+	sockPortFlag   = flag.String("port", "", "listening port")
+	sockAddrListen = ":4200"
 
-// List of all currently handled connections
-var connList *list.List
+	// List of all currently handled connections
+	connList *list.List
 
-// Map a connection to a name, filled with cellaserv.descrbie-conn
-var connNameMap map[net.Conn]string
+	// Map a connection to a name, filled with cellaserv.descrbie-conn
+	connNameMap map[net.Conn]string
 
-// Map a connection to the service it spies
-var connSpies map[net.Conn][]*Service
+	// Map a connection to the service it spies
+	connSpies map[net.Conn][]*Service
 
-// Map of currently connected services by name, then identification
-var services map[string]map[string]*Service
+	// Map of currently connected services by name, then identification
+	services map[string]map[string]*Service
 
-// Map of all services associated with a connection
-var servicesConn map[net.Conn][]*Service
+	// Map of all services associated with a connection
+	servicesConn map[net.Conn][]*Service
 
-// Map of requests ids with associated timeout timer
-var reqIds map[uint64]*RequestTracking
-var subscriberMap map[string][]net.Conn
-var subscriberMatchMap map[string][]net.Conn
+	// Map of requests ids with associated timeout timer
+	reqIds             map[uint64]*RequestTracking
+	subscriberMap      map[string][]net.Conn
+	subscriberMatchMap map[string][]net.Conn
+)
 
 // Manage incoming connexions
 func handle(conn net.Conn) {

@@ -29,8 +29,10 @@ type PacketHeader struct {
 	OrigLen uint32
 }
 
-var dumpFile *bufio.Writer
-var dumpFileFlag = flag.String("dump-file", "", "Dump messages in FILE")
+var (
+	dumpFile     *bufio.Writer
+	dumpFileFlag = flag.String("dump-file", "", "Dump messages in FILE")
+)
 
 func dumpSetup() error {
 	if *dumpFileFlag == "" {

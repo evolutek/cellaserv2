@@ -10,20 +10,22 @@ import (
 	"time"
 )
 
-// log is the main cellaserv logger, use it everywhere you want!
-var log *logging.Logger
+var (
+	// log is the main cellaserv logger, use it everywhere you want!
+	log *logging.Logger
 
-// Default log level
-var logLevel = logging.WARNING
+	// Default log level
+	logLevel = logging.WARNING
 
-// Command line flags
-var logRootDirectory = flag.String("log-root", ".", "root directory of logs")
-var logSubDir string
-var logLevelFlag = flag.String("log-level", "", "logger verbosity")
-var logToFile = flag.String("log-file", "", "log to custom file instead of stderr")
+	// Command line flags
+	logRootDirectory = flag.String("log-root", ".", "root directory of logs")
+	logSubDir        string
+	logLevelFlag     = flag.String("log-level", "", "logger verbosity")
+	logToFile        = flag.String("log-file", "", "log to custom file instead of stderr")
 
-// Map of the logger associated with a service
-var servicesLogs map[string]*golog.Logger
+	// Map of the logger associated with a service
+	servicesLogs map[string]*golog.Logger
+)
 
 // Setup that must be done before any log is made. Command line arguments parsing must be done
 // before calling logPreSetup()
