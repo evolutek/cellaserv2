@@ -101,7 +101,7 @@ func handle(conn net.Conn) {
 	removeConnFromMap(subscriberMap)
 	removeConnFromMap(subscriberMatchMap)
 
-	// Remove spy info
+	// Remove conn from the services it spied
 	for _, srvc := range connSpies[conn] {
 		for i, connItem := range srvc.Spies {
 			if connItem == conn {

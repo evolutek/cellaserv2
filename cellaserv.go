@@ -237,7 +237,7 @@ func handleSpy(conn net.Conn, req *cellaserv.Request) {
 
 	srvc, ok := services[data.Service][data.Identification]
 	if !ok {
-		log.Warning("[Cellaserv] Could not spy, no such service: %s/%s", data.Service,
+		log.Warning("[Cellaserv] Could not spy, no such service: %s %s", data.Service,
 			data.Identification)
 		sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
 		return
