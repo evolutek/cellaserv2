@@ -74,6 +74,12 @@ func handle(conn net.Conn) {
 		pub_json, _ := json.Marshal(s.JSONStruct())
 		cellaservPublish(logLostService, pub_json)
 		delete(services[s.Name], s.Identification)
+
+		// Close connections that spied this service
+		for _, c := range s.Spies {
+			log.Debug("[Service] Close spy conn: %s", connDescribe(c))
+			c.Close()
+		}
 	}
 	delete(servicesConn, conn)
 
