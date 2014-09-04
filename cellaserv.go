@@ -2,7 +2,6 @@ package main
 
 import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
-	"bytes"
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/json"
 	"io/ioutil"
@@ -133,7 +132,7 @@ Examples:
 
 Reply format:
 
-	bytes
+	map[string]string
 
 */
 func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
@@ -167,7 +166,7 @@ func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 		return
 	}
 
-	var data_buf bytes.Buffer
+	logs := make(map[string]string)
 
 	for _, filename := range filenames {
 		data, err := ioutil.ReadFile(filename)
@@ -176,9 +175,11 @@ func handleGetLogs(conn net.Conn, req *cellaserv.Request) {
 			sendReplyError(conn, req, cellaserv.Reply_Error_BadArguments)
 			return
 		}
-		data_buf.Write(data)
+		logs[filename] = string(data)
 	}
-	sendReply(conn, req, data_buf.Bytes())
+
+	logs_json, _ := json.Marshal(logs)
+	sendReply(conn, req, logs_json)
 }
 
 // handleLogRotate changes the current log environment
