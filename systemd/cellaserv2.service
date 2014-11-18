@@ -5,3 +5,6 @@ PartOf=evolutek.target
 [Service]
 Restart=always
 ExecStart=/usr/bin/cellaserv2 -log-root=/var/log/cellaserv
+
+[Install]
+WantedBy=evolutek.target
