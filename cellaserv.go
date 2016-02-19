@@ -2,7 +2,7 @@ package main
 
 import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
-	"code.google.com/p/goprotobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"encoding/json"
 	"io/ioutil"
 	"net"
