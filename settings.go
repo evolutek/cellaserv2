@@ -1,9 +1,10 @@
 package main
 
 import (
-	"code.google.com/p/gcfg"
-	"github.com/op/go-logging"
 	"os"
+
+	"gopkg.in/gcfg.v1"
+	"github.com/op/go-logging"
 )
 
 var cfg struct {

@@ -3,7 +3,7 @@ package main
 import (
 	"bitbucket.org/evolutek/cellaserv2-protobuf"
 	"bufio"
-	"code.google.com/p/goprotobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"encoding/binary"
 	"flag"
 	"net"
