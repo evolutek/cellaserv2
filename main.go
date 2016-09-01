@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"io"
 )
 
 var (
@@ -136,6 +137,9 @@ func handleMessage(conn net.Conn) (bool, error) {
 	var msgLen uint32
 	err := binary.Read(conn, binary.BigEndian, &msgLen)
 	if err != nil {
+		if err == io.EOF {
+			return true, nil
+		}
 		return true, fmt.Errorf("Could not read message length: %s", err)
 	}
 
